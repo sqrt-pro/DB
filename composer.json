@@ -5,12 +5,18 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "php": ">=5.3.0"
+        "php": ">=5.3.0",
+        "sqrt-pro/exception": "dev-master",
+        "sqrt-pro/query-builder": "dev-master",
+        "danielstjules/stringy": "dev-master"
     },
     "autoload": {
         "psr-0": {
             "SQRT": "src"
         }
+    },
+    "config":{
+        "bin-dir":"bin"
     },
     "minimum-stability": "dev"
 }
