@@ -8,7 +8,9 @@
         "php": ">=5.3.0",
         "sqrt-pro/exception": "dev-master",
         "sqrt-pro/query-builder": "dev-master",
-        "danielstjules/stringy": "dev-master"
+        "sqrt-pro/helpers": "dev-master",
+        "danielstjules/stringy": "dev-master",
+        "robmorgan/phinx": "*"
     },
     "autoload": {
         "psr-0": {
