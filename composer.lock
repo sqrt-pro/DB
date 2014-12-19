@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "f8488dd2e848c6b4bea4f013baa70592",
+    "hash": "f5b0c5d2bcada184db6c75dd10ae53a9",
     "packages": [
         {
             "name": "danielstjules/stringy",
@@ -183,12 +183,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sqrt-pro/QueryBuilder.git",
-                "reference": "4da3f9c40f7321f1c34e479788520dde7be81f0e"
+                "reference": "cf433d32cc6c04821827f49dfd4eb3be790d9509"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sqrt-pro/QueryBuilder/zipball/4da3f9c40f7321f1c34e479788520dde7be81f0e",
-                "reference": "4da3f9c40f7321f1c34e479788520dde7be81f0e",
+                "url": "https://api.github.com/repos/sqrt-pro/QueryBuilder/zipball/cf433d32cc6c04821827f49dfd4eb3be790d9509",
+                "reference": "cf433d32cc6c04821827f49dfd4eb3be790d9509",
                 "shasum": ""
             },
             "require": {
@@ -206,7 +206,7 @@
             ],
             "description": "SQL Query Builder is a part of SQRT Framework",
             "homepage": "http://fw.sqrt.pro",
-            "time": "2014-10-11 09:30:29"
+            "time": "2014-12-18 15:38:35"
         },
         {
             "name": "symfony/class-loader",
@@ -462,8 +462,8 @@
     "stability-flags": {
         "sqrt-pro/exception": 20,
         "sqrt-pro/query-builder": 20,
-        "danielstjules/stringy": 20,
-        "sqrt-pro/helpers": 20
+        "sqrt-pro/helpers": 20,
+        "danielstjules/stringy": 20
     },
     "prefer-stable": false,
     "platform": {

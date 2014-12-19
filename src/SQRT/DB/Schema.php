@@ -36,12 +36,14 @@ class Schema
 
   /** @var Manager */
   protected $manager;
-
   protected $table;
   protected $name;
+  protected $type = self::TYPE_INNODB;
   protected $primary_key;
-  protected $item_base_class = '\Base\Item';
-  protected $type            = self::TYPE_INNODB;
+
+  protected $item_class;
+  protected $item_base_class       = '\Base\Item';
+  protected $collection_base_class = '\Base\Collection';
 
   protected $indexes;
   protected $columns;
@@ -301,6 +303,23 @@ class Schema
     return $this;
   }
 
+  /** Базовый класс, от которого наследуются Collection */
+  public function getCollectionBaseClass()
+  {
+    return $this->collection_base_class;
+  }
+
+  /**
+   * Базовый класс, от которого наследуются Collection
+   * @return static
+   */
+  public function setCollectionBaseClass($collection_base_class)
+  {
+    $this->collection_base_class = $collection_base_class;
+
+    return $this;
+  }
+
   /** Первичный ключ */
   public function getPrimaryKey()
   {
@@ -343,11 +362,30 @@ class Schema
     return $this;
   }
 
+  /** Класс для Item */
+  public function getItemClass()
+  {
+    return $this->item_class ?: StaticStringy::removeRight($this->getName(), 's');
+  }
+
+  /**
+   * Класс для Item
+   * @return static
+   */
+  public function setItemClass($item_class)
+  {
+    $this->item_class = $item_class;
+
+    return $this;
+  }
+
+  /** Создание имени для миграции */
   public function makeMigrationName($name)
   {
     return date('YmdHis') . '_' . StaticStringy::slugify($name, '_') . '.php';
   }
 
+  /** Генерация миграции */
   public function makeMigration($name)
   {
     $m = $this->getManager();
@@ -424,6 +462,203 @@ class Schema
     . "  {\n" . $tbl . $down . ($tbl_exists ? $save : '')
     . "  }\n"
     . "}\n";
+  }
+
+  /** Генерация Item */
+  public function makeItem($namespace = 'ORM')
+  {
+    $before = $after = $func = '';
+
+    if ($pk = $this->getPrimaryKey()) {
+      if (!isset($this->columns[$pk])) {
+        $func[] = $this->makeItemGetter($pk);
+        $func[] = $this->makeItemSetter($pk);
+      }
+    }
+
+    foreach ($this->columns as $col => $def) {
+      switch ($def['type']) {
+        case self::COL_BOOL:
+        case self::COL_INT:
+          $this->makeItemInt($def, $func, $before, $after);
+          break;
+
+        case self::COL_ENUM:
+          $this->makeItemEnum($def, $func, $before, $after);
+          break;
+
+        case self::COL_TIMESTAMP:
+        case self::COL_DATETIME:
+          $this->makeItemTime($def, $func, $before, $after);
+          break;
+
+        case self::COL_FLOAT:
+          $this->makeItemFloat($def, $func, $before, $after);
+          break;
+
+        default:
+          $this->makeItemChar($def, $func, $before, $after);
+      }
+    }
+
+    $fields = join("',\n        '", array_keys($this->columns));
+
+    $str = "<?php\n\nnamespace $namespace;\n\n"
+      . "use SQRT\\DB\\Exception;\n\n"
+      . "class " . $this->getItemClass() . " extends " . $this->getItemBaseClass() . "\n"
+      . "{\n"
+      . ($before ? join("\n\n", $before) . "\n\n" : '')
+      . "  protected function init()\n"
+      . "  {\n"
+      . "    \$this->setPrimaryKey(" . var_export($pk, true) . ");\n"
+      . "    \$this->setTable('users');\n"
+      . "    \$this->setFields(\n"
+      . "      array(\n"
+      . "        '$fields',\n"
+      . "      )\n"
+      . "    );\n"
+      . "  }\n\n"
+      . ($func ? join("\n\n", $func) : '')
+      . ($after ? "\n\n" . join("\n\n", $after) . "\n" : '')
+      . "}\n";
+
+    return $str;
+  }
+
+  /** Генерация коллекции */
+  public function makeCollection($namespace = 'Collection')
+  {
+    $class = $this->getItemClass();
+
+    return "<?php\n\nnamespace $namespace;\n\n"
+    . "/**\n"
+    . ' * @method \\' . $class . ' findOne($where = null) Найти и получить один объект' . "\n"
+    . ' * @method \\' . $class . ' make() Создать новый объект' . "\n"
+    . ' * @method \\' . $class . ' fetchObject(\PDOStatement $statement) Получение объекта из запроса' . "\n"
+    . "*/\n"
+    . "class " . $this->getName() . " extends " . $this->getCollectionBaseClass() . "\n"
+    . "{\n"
+    . "  protected function init()\n"
+    . "  {\n"
+    . "    \$this->setItemClass('\\$class');\n"
+    . "    \$this->setTable('" . $this->getTable() . "');\n"
+    . "  }\n"
+    . "}\n";
+  }
+
+  protected function makeItemChar($def, &$func, &$before, &$after)
+  {
+    $col = $def['column'];
+
+    $func[] = $this->makeItemGetter($col);
+    $func[] = $this->makeItemSetter($col);
+  }
+
+  protected function makeItemTime($def, &$func, &$before, &$after)
+  {
+    $col = $def['column'];
+
+    $func[] = "  public function " . Item::MakeGetterName($col) . "(\$default = false, \$format = null)\n"
+      . "  {\n"
+      . "    return \$this->getAsDate('$col', \$default, \$format);\n"
+      . "  }";
+
+    $func[] = "  /** @return static */\n"
+      . "  public function " . Item::MakeSetterName($col) . "(\$$col)\n"
+      . "  {\n"
+      . "    return \$this->setAsDate('$col', \$$col);\n"
+      . "  }";
+  }
+
+  protected function makeItemFloat($def, &$func, &$before, &$after)
+  {
+    $col = $def['column'];
+
+    $func[] = "  public function " . Item::MakeGetterName($col)
+      . "(\$default = false, \$decimals = null, \$point = null, \$thousands = null)\n"
+      . "  {\n"
+      . "    return \$this->getAsFloat('{$col}', \$default, \$decimals, \$point, \$thousands);\n"
+      . "  }";
+    $func[] = $this->makeItemSetter($col);
+  }
+
+  protected function makeItemEnum($def, &$func, &$before, &$after)
+  {
+    $col        = $def['column'];
+    $getter     = Item::MakeGetterName($col);
+    $name_for   = 'GetNameFor' . StaticStringy::upperCamelize($col);
+    $getter_arr = 'Get' . StaticStringy::upperCamelize($col) . 'Arr';
+    $const      = $names = '';
+
+
+    if (!empty($def['options'])) {
+      foreach ($def['options'] as $v) {
+        $c = strtoupper($col . '_' . $v);
+
+        $const[] = "  const " . $c . " = '$v';";
+        $names[] = "    self::" . $c . " => '$v',";
+      }
+
+      $before[] = join("\n", $const);
+    }
+    $before[] = "  protected static \${$col}_arr = array(\n" . join("\n", $names) . "\n  );";
+
+    $func[] = $this->makeItemGetter($col);
+    $func[] = "  public function {$getter}Name()\n"
+      . "  {\n"
+      . "    return static::{$name_for}(\$this->{$getter}());\n"
+      . "  }";
+    $func[] = "  /** @return static */\n"
+      . "  public function " . Item::MakeSetterName($col) . "(\$$col)\n"
+      . "  {\n"
+      . "    if (!empty(\${$col}) && !static::{$name_for}(\${$col})) {\n"
+      . "      Exception::ThrowError(Exception::ENUM_BAD_VALUE, '{$col}', \${$col});\n"
+      . "    }\n\n"
+      . "    return \$this->set('$col', \$$col);\n"
+      . "  }";
+
+    $after[] = "  public static function {$getter_arr}()\n"
+      . "  {\n"
+      . "    return static::\${$col}_arr;\n"
+      . "  }";
+    $after[] = "  public static function {$name_for}(\${$col})\n"
+      . "  {\n"
+      . "    \$a = static::{$getter_arr}();\n\n"
+      . "    return isset(\$a[\${$col}]) ? \$a[\${$col}] : false;\n"
+      . "  }";
+  }
+
+  protected function makeItemInt($def, &$func, &$before, &$after)
+  {
+    $col = $def['column'];
+
+    $func[] = "  public function " . Item::MakeGetterName($col) . "(\$default = null)\n"
+      . "  {\n"
+      . "    return (int)\$this->get('$col', \$default);\n"
+      . "  }";
+
+    $func[] = "  /** @return static */\n"
+      . "  public function " . Item::MakeSetterName($col) . "(\$$col)\n"
+      . "  {\n"
+      . "    return \$this->set('$col', (int)\$$col);\n"
+      . "  }";
+  }
+
+  protected function makeItemGetter($col)
+  {
+    return "  public function " . Item::MakeGetterName($col) . "(\$default = null)\n"
+    . "  {\n"
+    . "    return \$this->get('$col', \$default);\n"
+    . "  }";
+  }
+
+  protected function makeItemSetter($col)
+  {
+    return "  /** @return static */\n"
+    . "  public function " . Item::MakeSetterName($col) . "(\$$col)\n"
+    . "  {\n"
+    . "    return \$this->set('$col', \$$col);\n"
+    . "  }";
   }
 
   protected function makeAddExpr($col, $update = false)

@@ -108,6 +108,16 @@ class Manager
     return !empty($this->schemas) ? $this->schemas : false;
   }
 
+  /** @return Collection */
+  public function getCollection($name)
+  {
+    if (!$s = $this->getSchema($name)) {
+      Exception::ThrowError(Exception::SCHEMA_NOT_EXISTS, $name);
+    }
+
+    return new Collection($this, $s->getTable(), $s->getItemClass());
+  }
+
   /** Префикс для всех таблиц */
   public function getPrefix()
   {
