@@ -31,6 +31,8 @@ class Item extends Container
     $qb = $m->getQueryBuilder();
     $pk = $this->getPrimaryKey();
 
+    $this->beforeSave();
+
     if ($this->isNew()) {
       $reload = true;
 
@@ -59,6 +61,8 @@ class Item extends Container
       $this->load();
     }
 
+    $this->afterSave();
+
     return $this;
   }
 
@@ -82,6 +86,8 @@ class Item extends Container
   /** Удаление объекта из БД */
   public function delete()
   {
+    $this->beforeDelete();
+
     $m = $this->getManager();
     if (!$pk = $this->getPrimaryKey()) {
       Exception::ThrowError(Exception::PK_NOT_SET, __CLASS__);
@@ -92,6 +98,8 @@ class Item extends Container
       ->where(array($pk => $this->get($pk)));
 
     $m->query($q);
+
+    $this->afterDelete();
 
     return $this;
   }
@@ -246,6 +254,16 @@ class Item extends Container
     return $this;
   }
 
+  public static function MakeGetterName($column)
+  {
+    return 'get' . StaticStringy::upperCamelize($column);
+  }
+
+  public static function MakeSetterName($column)
+  {
+    return 'set' . StaticStringy::upperCamelize($column);
+  }
+
   /** Значения для сохранения в БД */
   protected function getVarsForDB()
   {
@@ -256,14 +274,24 @@ class Item extends Container
     return array_intersect_key($this->vars, array_flip($fields));
   }
 
-  public static function MakeGetterName($column)
+  protected function beforeSave()
   {
-    return 'get' . StaticStringy::upperCamelize($column);
+
   }
 
-  public static function MakeSetterName($column)
+  protected function afterSave()
   {
-    return 'set' . StaticStringy::upperCamelize($column);
+
+  }
+
+  protected function beforeDelete()
+  {
+
+  }
+
+  protected function afterDelete()
+  {
+
   }
 
   protected function init()

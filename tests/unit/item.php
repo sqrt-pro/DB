@@ -209,6 +209,22 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $this->assertEquals('setHelloThere', \SQRT\DB\Item::MakeSetterName('hello_there'), 'Сеттер');
   }
 
+  function testBeforeAfter()
+  {
+    $i = new TestItem($this->getManager(), 'pages');
+    $i->setPrimaryKey('id');
+    $i->set('name', 1);
+    $i->save();
+
+    $this->assertEquals(10, $i->get('id'), 'Триггер beforeSave установил ID');
+    $this->assertEquals(1, $i->get('after_save'), 'Триггер afterSave установил поле');
+
+    $i->delete();
+
+    $this->assertEquals(1, $i->get('before_delete'), 'Триггер beforeDelete установил поле');
+    $this->assertEquals(1, $i->get('after_delete'), 'Триггер afterDelete установил поле');
+  }
+
   protected function getManager()
   {
     $m = new Manager();
@@ -232,5 +248,28 @@ class ItemTest extends PHPUnit_Framework_TestCase
   {
     $this->getManager()
       ->query('DROP TABLE IF EXISTS test_pages');
+  }
+}
+
+class TestItem extends \SQRT\DB\Item
+{
+  protected function beforeSave()
+  {
+    $this->set('id', 10);
+  }
+
+  protected function afterSave()
+  {
+    $this->set('after_save', 1);
+  }
+
+  protected function beforeDelete()
+  {
+    $this->set('before_delete', 1);
+  }
+
+  protected function afterDelete()
+  {
+    $this->set('after_delete', 1);
   }
 }
