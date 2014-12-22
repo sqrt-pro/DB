@@ -34,6 +34,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
     $c->find('`id` > 5');
 
     $this->assertEquals(5, $c->count(), '4 элемента после выборки');
+    $this->assertInstanceOf('ArrayIterator', $c->getIterator(), 'Iterator');
   }
 
   function testFindOne()

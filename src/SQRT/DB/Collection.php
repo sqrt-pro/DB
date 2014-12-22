@@ -175,7 +175,7 @@ class Collection implements \IteratorAggregate, \Countable
   /** @return Item[] */
   public function getIterator()
   {
-    return $this->items ?: array();
+    return new \ArrayIterator($this->items ?: array());
   }
 
   public function getTable()
