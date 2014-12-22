@@ -57,7 +57,7 @@ class MyMigration extends AbstractMigration
     \$tbl = \$this->table('test_users', array('id' => 'id'));
     \$tbl->addColumn("is_active", "boolean", array ( 'default' => 0,));
     \$tbl->addColumn("age", "integer", array ( 'length' => 10, 'default' => 0, 'signed' => true,));
-    \$tbl->addColumn("name", "string", array ( 'length' => 255,));
+    \$tbl->addColumn("name", "string", array ( 'length' => 255, 'null' => true,));
     \$tbl->addColumn("type", "string", array ( 'default' => NULL, 'length' => 255,));
     \$tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
     \$tbl->addColumn("text", "text");
@@ -74,8 +74,6 @@ class MyMigration extends AbstractMigration
 PHP;
 
     $res = $s->makeMigration('my migration');
-    $this->saveMigr($res, $s);
-
     $this->assertEquals($exp, $res, 'Генерация файла миграции');
   }
 
@@ -142,7 +140,7 @@ class MyMigration extends AbstractMigration
     \$tbl = \$this->table('test_pages', array('id' => false));
     \$tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
     \$tbl->removeColumn("id");
-    \$tbl->changeColumn("name", "string", array ( 'length' => 255,));
+    \$tbl->changeColumn("name", "string", array ( 'length' => 255, 'null' => true,));
     \$tbl->save();
   }
 
@@ -211,7 +209,6 @@ PHP;
 
     $name = 'authors';
     $res = $a->makeMigration($name);
-    $this->saveMigr($res, $a, $name);
 
     $s = new Schema($m);
     $s->setTable('books');
@@ -287,6 +284,8 @@ PHP;
 namespace Collection;
 
 /**
+ * Этот файл сгенерирован автоматически по схеме Users
+ *
  * @method \User findOne(\$where = null) Найти и получить один объект
  * @method \User make() Создать новый объект
  * @method \User fetchObject(\PDOStatement \$statement) Получение объекта из запроса
@@ -311,7 +310,8 @@ namespace ORM;
 
 use SQRT\DB\Exception;
 
-class User extends \Base\Item
+/** Этот файл сгенерирован автоматически по схеме Users */
+abstract class User extends \Base\Item
 {
   const TYPE_NEW = 'new';
   const TYPE_OLD = 'old';
@@ -327,6 +327,7 @@ class User extends \Base\Item
     \$this->setTable('users');
     \$this->setFields(
       array(
+        'id',
         'is_active',
         'type',
         'age',

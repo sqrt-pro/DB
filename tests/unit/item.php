@@ -7,6 +7,36 @@ use SQRT\DB\Collection;
 
 class ItemTest extends PHPUnit_Framework_TestCase
 {
+  function testBeforeSave()
+  {
+
+  }
+
+  function testChangePrimaryKey()
+  {
+
+  }
+
+  function testOneToMany()
+  {
+
+  }
+
+  function testOneToOne()
+  {
+
+  }
+
+  function testManyToMany()
+  {
+
+  }
+
+  function testAddFile()
+  {
+
+  }
+
   function testSave()
   {
     $m = $this->getManager();

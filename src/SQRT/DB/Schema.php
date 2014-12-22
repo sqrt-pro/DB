@@ -106,7 +106,7 @@ class Schema
 
   public function addChar($col, $length = 255)
   {
-    return $this->add($col, static::COL_CHAR, array('length' => $length));
+    return $this->add($col, static::COL_CHAR, array('length' => $length, 'null' => true));
   }
 
   public function addEnum($col, $options, $default = null)
@@ -125,7 +125,7 @@ class Schema
 
   public function addTime($col, $unix = true)
   {
-    return $this->add($col, ($unix ? static::COL_TIMESTAMP : static::COL_DATETIME), array('default' => 'NULL'));
+    return $this->add($col, ($unix ? static::COL_TIMESTAMP : static::COL_DATETIME), array('null' => true));
   }
 
   public function addTimeCreated($col = 'created_at')
@@ -468,9 +468,11 @@ class Schema
   public function makeItem($namespace = 'ORM')
   {
     $before = $after = $func = '';
+    $fields_arr = array_keys($this->columns);
 
     if ($pk = $this->getPrimaryKey()) {
       if (!isset($this->columns[$pk])) {
+        array_unshift($fields_arr, $pk);
         $func[] = $this->makeItemGetter($pk);
         $func[] = $this->makeItemSetter($pk);
       }
@@ -501,11 +503,12 @@ class Schema
       }
     }
 
-    $fields = join("',\n        '", array_keys($this->columns));
+    $fields = join("',\n        '", $fields_arr);
 
     $str = "<?php\n\nnamespace $namespace;\n\n"
       . "use SQRT\\DB\\Exception;\n\n"
-      . "class " . $this->getItemClass() . " extends " . $this->getItemBaseClass() . "\n"
+      . "/** Этот файл сгенерирован автоматически по схеме {$this->getName()} */\n"
+      . "abstract class " . $this->getItemClass() . " extends " . $this->getItemBaseClass() . "\n"
       . "{\n"
       . ($before ? join("\n\n", $before) . "\n\n" : '')
       . "  protected function init()\n"
@@ -532,6 +535,8 @@ class Schema
 
     return "<?php\n\nnamespace $namespace;\n\n"
     . "/**\n"
+    . ' * Этот файл сгенерирован автоматически по схеме ' . $this->getName() . "\n"
+    . " *\n"
     . ' * @method \\' . $class . ' findOne($where = null) Найти и получить один объект' . "\n"
     . ' * @method \\' . $class . ' make() Создать новый объект' . "\n"
     . ' * @method \\' . $class . ' fetchObject(\PDOStatement $statement) Получение объекта из запроса' . "\n"
