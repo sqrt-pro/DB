@@ -59,6 +59,12 @@ class Schema
     $this->init();
   }
 
+  /** Заполнение таблицы данными по-умолчанию */
+  public function fixture(Manager $manager)
+  {
+
+  }
+
   /**
    * Столбец таблицы
    *
