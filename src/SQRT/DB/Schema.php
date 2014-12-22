@@ -111,7 +111,12 @@ class Schema
 
   public function addEnum($col, $options, $default = null)
   {
-    return $this->add($col, static::COL_ENUM, array('default' => $default), $options);
+    $def = array('null' => true);
+    if ($default) {
+      $def['default'] = $default;
+    }
+
+    return $this->add($col, static::COL_ENUM, $def, $options);
   }
 
   public function addFloat($col, $length = 10, $decimals = 2, $signed = false)

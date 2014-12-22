@@ -58,7 +58,7 @@ class MyMigration extends AbstractMigration
     \$tbl->addColumn("is_active", "boolean", array ( 'default' => 0,));
     \$tbl->addColumn("age", "integer", array ( 'length' => 10, 'default' => 0, 'signed' => true,));
     \$tbl->addColumn("name", "string", array ( 'length' => 255, 'null' => true,));
-    \$tbl->addColumn("type", "string", array ( 'default' => NULL, 'length' => 255,));
+    \$tbl->addColumn("type", "string", array ( 'null' => true, 'length' => 255,));
     \$tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
     \$tbl->addColumn("text", "text");
     \$tbl->save();
