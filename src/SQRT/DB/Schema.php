@@ -60,7 +60,7 @@ class Schema
   }
 
   /** Заполнение таблицы данными по-умолчанию */
-  public function fixture(Manager $manager)
+  public function fixture()
   {
 
   }
