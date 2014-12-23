@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "f5b0c5d2bcada184db6c75dd10ae53a9",
+    "hash": "72d3c01c956ba489447d937cded231ae",
     "packages": [
         {
             "name": "danielstjules/stringy",
@@ -178,6 +178,46 @@
             "time": "2014-12-02 05:42:55"
         },
         {
+            "name": "sqrt-pro/image",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sqrt-pro/Image.git",
+                "reference": "1f6f67495f5f941b9cfabb4afa6af218fcda4bd2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sqrt-pro/Image/zipball/1f6f67495f5f941b9cfabb4afa6af218fcda4bd2",
+                "reference": "1f6f67495f5f941b9cfabb4afa6af218fcda4bd2",
+                "shasum": ""
+            },
+            "require": {
+                "ext-gd": "*",
+                "php": ">=5.3.0",
+                "sqrt-pro/exception": "dev-master"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "SQRT": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Igor Osharin",
+                    "email": "igor@osharin.ru",
+                    "homepage": "http://igor.osharin.ru"
+                }
+            ],
+            "description": "Image is part of SQRT Framework",
+            "homepage": "http://fw.sqrt.pro",
+            "time": "2014-12-23 06:20:31"
+        },
+        {
             "name": "sqrt-pro/query-builder",
             "version": "dev-master",
             "source": {
@@ -207,6 +247,71 @@
             "description": "SQL Query Builder is a part of SQRT Framework",
             "homepage": "http://fw.sqrt.pro",
             "time": "2014-12-18 15:38:35"
+        },
+        {
+            "name": "sqrt-pro/tag",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sqrt-pro/Tag.git",
+                "reference": "b21168bdb83bf8f4b9303a1f4c0c068bff6f2910"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sqrt-pro/Tag/zipball/b21168bdb83bf8f4b9303a1f4c0c068bff6f2910",
+                "reference": "b21168bdb83bf8f4b9303a1f4c0c068bff6f2910",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "SQRT": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "SQRT.pro Tag is part of SQRT Framework",
+            "homepage": "http://fw.sqrt.pro",
+            "time": "2014-12-07 15:23:05"
+        },
+        {
+            "name": "sqrt-pro/url",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/sqrt-pro/URL.git",
+                "reference": "de1de159379e149fa7e7177724343d971b90f213"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/sqrt-pro/URL/zipball/de1de159379e149fa7e7177724343d971b90f213",
+                "reference": "de1de159379e149fa7e7177724343d971b90f213",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0",
+                "sqrt-pro/helpers": "dev-master",
+                "sqrt-pro/tag": "dev-master",
+                "true/punycode": "~1.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "SQRT": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "SQRT.pro URL is part of SQRT Framework",
+            "homepage": "http://fw.sqrt.pro",
+            "time": "2014-12-02 03:43:48"
         },
         {
             "name": "symfony/class-loader",
@@ -454,6 +559,53 @@
             "description": "Symfony Yaml Component",
             "homepage": "http://symfony.com",
             "time": "2014-12-04 08:55:19"
+        },
+        {
+            "name": "true/punycode",
+            "version": "1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/true/php-punycode.git",
+                "reference": "59dca474914324763397be2ea3d6ad3bc48f4688"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/true/php-punycode/zipball/59dca474914324763397be2ea3d6ad3bc48f4688",
+                "reference": "59dca474914324763397be2ea3d6ad3bc48f4688",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "php": ">=5.3.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.x",
+                "satooshi/php-coveralls": "dev-master",
+                "squizlabs/php_codesniffer": "2.0.x-dev"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "True\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Renan Gonçalves",
+                    "email": "renan.saddam@gmail.com"
+                }
+            ],
+            "description": "A Bootstring encoding of Unicode for Internationalized Domain Names in Applications (IDNA)",
+            "homepage": "https://github.com/true/php-punycode",
+            "keywords": [
+                "idna",
+                "punycode"
+            ],
+            "time": "2014-08-26 14:21:01"
         }
     ],
     "packages-dev": [],
@@ -463,7 +615,9 @@
         "sqrt-pro/exception": 20,
         "sqrt-pro/query-builder": 20,
         "sqrt-pro/helpers": 20,
-        "danielstjules/stringy": 20
+        "sqrt-pro/image": 20,
+        "danielstjules/stringy": 20,
+        "sqrt-pro/url": 20
     },
     "prefer-stable": false,
     "platform": {

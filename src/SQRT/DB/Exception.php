@@ -9,12 +9,16 @@ class Exception extends \SQRT\Exception
   const SCHEMA_NOT_EXISTS     = 30;
   const PK_NOT_SET            = 40;
   const ENUM_BAD_VALUE        = 50;
+  const FILE_NOT_EXISTS       = 60;
+  const PROCESSING_FILE       = 61;
 
   protected static $errors_arr = array(
     self::CONNECTION_NOT_EXISTS => 'Подключение к БД "%s" не существует',
     self::QUERY                 => '[%2$s] %3$s',
     self::SCHEMA_NOT_EXISTS     => 'Схема "%s" не существует',
     self::PK_NOT_SET            => 'Первичный ключ для "%s" не задан',
-    self::ENUM_BAD_VALUE        => 'Поле "%s" не содержит варианта "%s"'
+    self::ENUM_BAD_VALUE        => 'Поле "%s" не содержит варианта "%s"',
+    self::FILE_NOT_EXISTS       => 'Файл "%s" не существует',
+    self::PROCESSING_FILE       => 'Ошибка при обработке файла: %s',
   );
 } 

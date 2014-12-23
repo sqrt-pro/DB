@@ -2,6 +2,7 @@
 
 namespace SQRT\DB;
 
+use SQRT\Image;
 use SQRT\Helpers\Container;
 use Stringy\StaticStringy;
 
@@ -14,6 +15,9 @@ class Item extends Container
   protected $fields;
   protected $autoescape  = true;
   protected $primary_key;
+  protected $files_path;
+  protected $public_path;
+  protected $serialized;
 
   function __construct(Manager $manager, $table = null, $is_new = true)
   {
@@ -150,15 +154,29 @@ class Item extends Container
   /** Получить значение из сериализованного поля */
   public function getSerialized($column, $default = false)
   {
-    $v = $this->get($column, false, false);
+    if (!isset($this->serialized[$column])) {
+      $v = $this->get($column, false, false);
 
-    return !empty($v) ? unserialize($v) : $default;
+      $this->serialized[$column] = !empty($v) ? unserialize($v) : false;
+    }
+
+    return $this->serialized[$column] ?: $default;
   }
 
   /** Сериализовать значение в поле */
   public function setSerialized($column, $value)
   {
-    $this->set($column, !empty($value) ? serialize($value) : null);
+    unset($this->serialized[$column]);
+
+    return $this->set($column, !empty($value) ? serialize($value) : null);
+  }
+
+  /** Сбросить кеш десериализованных полей */
+  public function resetSerializedCache()
+  {
+    $this->serialized = null;
+
+    return $this;
   }
 
   /** Режим безопасного отображения данных с полным экранированием */
@@ -254,6 +272,40 @@ class Item extends Container
     return $this;
   }
 
+  /** Путь к файлам на сервере */
+  public function getFilesPath()
+  {
+    return $this->files_path;
+  }
+
+  /**
+   * Путь к файлам на сервере
+   * @return static
+   */
+  public function setFilesPath($files_path)
+  {
+    $this->files_path = $files_path;
+
+    return $this;
+  }
+
+  /** Путь на веб-сервере к файлам */
+  public function getPublicPath()
+  {
+    return $this->public_path;
+  }
+
+  /**
+   * Путь на веб-сервере к файлам
+   * @return static
+   */
+  public function setPublicPath($public_path)
+  {
+    $this->public_path = $public_path;
+
+    return $this;
+  }
+
   public static function MakeGetterName($column)
   {
     return 'get' . StaticStringy::upperCamelize($column);
@@ -272,6 +324,132 @@ class Item extends Container
     }
 
     return array_intersect_key($this->vars, array_flip($fields));
+  }
+
+  /**
+   * Обработка файла и сохранение в объект
+   * $column - поле
+   * $file - исходный файл
+   * $filename - относительный путь выходного файла
+   * $name - название файла
+   */
+  protected function processFile($column, $file, $filename, $name = null)
+  {
+    if (!is_file($file)) {
+      Exception::ThrowError(Exception::FILE_NOT_EXISTS, $file);
+    }
+
+    $ext  = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    $size = filesize($file);
+
+    $this->copyFile($file, $this->getFilesPath() . $filename);
+
+    return $this->setSerialized(
+      $column,
+      array(
+        'file'      => $filename,
+        'extension' => $ext,
+        'size'      => $size,
+        'name'      => $name,
+      )
+    );
+  }
+
+  /**
+   * Обработка изображения и сохранение в объект
+   * $column - поле
+   * $file - исходный файл
+   * $filename - относительный путь выходного файла
+   * $name - название файла
+   * $size - "размерность" файла
+   */
+  protected function processImage($column, $file, $filename, $name = null, $size = false)
+  {
+    if (!is_file($file)) {
+      Exception::ThrowError(Exception::FILE_NOT_EXISTS, $file);
+    }
+
+    $ext  = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+    $path = $this->getFilesPath() . $filename;
+
+    /** @var Image $img */
+    $method = 'prepareImageFor' . StaticStringy::upperCamelize($column);
+    $img    = call_user_func_array(array($this, $method), array($file, $size));
+    if ($img instanceof Image) {
+      $img->save($path);
+      $w = $img->getWidth();
+      $h = $img->getHeight();
+    } else {
+      $this->copyFile($file, $path);
+      list($w, $h) = getimagesize($path);
+    }
+
+    $file_arr = array(
+      'file'      => $filename,
+      'extension' => $ext,
+      'size'      => filesize($path),
+      'name'      => $name,
+      'width'     => $w,
+      'height'    => $h,
+    );
+
+    if ($size) {
+      $this->resetSerializedCache($column);
+      $arr = $this->getSerialized($column);
+
+      $arr[$size] = $file_arr;
+    } else {
+      $arr = $file_arr;
+    }
+
+    return $this->setSerialized($column, $arr);
+  }
+
+  /** Перенос загруженного или копирование файла */
+  protected function copyFile($source, $dest)
+  {
+    $dir  = dirname($dest);
+
+    if (!is_dir($dir)) {
+      mkdir($dir, 0777, true);
+    }
+
+    if (is_uploaded_file($source)) {
+      $res = @move_uploaded_file($source, $dest);
+    } else {
+      $res = @copy($source, $dest);
+    }
+
+    if (!$res) {
+      $err = error_get_last();
+
+      Exception::ThrowError(Exception::PROCESSING_FILE, $err['message']);
+    }
+  }
+
+  /** Человеческое представление размера файла */
+  protected function getHumanFileSize($size)
+  {
+    if ($size < 1024) {
+      return $size . ' байт';
+    } elseif ($size < 1024*1024) {
+      return number_format($size / 1024, 2, '.', '')  . ' килобайт';
+    } else {
+      return number_format($size / 1024 / 1024, 2, '.', '')  . ' мегабайт';
+    }
+  }
+
+  /** Создание пути для файла */
+  protected function makeFileName($column, $filename, $size = false)
+  {
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $pk  = $this->getPrimaryKey();
+    $dir = '/' . $this->getTable();
+    if ($id = $this->get($pk)) {
+      $dir .= '/' . $id;
+    }
+
+    return $dir . '/' . $column . ($size ? '_' . $size : '') . '_' . md5(uniqid()) . ($ext ? '.' . $ext : '');
   }
 
   protected function beforeSave()

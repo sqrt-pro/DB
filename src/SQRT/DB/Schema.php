@@ -29,10 +29,17 @@ class Schema
   const COL_BOOL      = 'boolean';
   const COL_FLOAT     = 'float';
   const COL_TEXT      = 'text';
+  const COL_FILE      = 'file';
+  const COL_IMAGE     = 'image';
 
   const FK_SET_NULL = 'SET NULL';
   const FK_CASCADE  = 'CASCADE';
   const FK_RESTRICT = 'RESTRICT';
+
+  const TINYTEXT   = 255;
+  const TEXT       = 65535;
+  const MEDIUMTEXT = 16777215;
+  const LONGTEXT   = 16777216;
 
   /** @var Manager */
   protected $manager;
@@ -117,7 +124,7 @@ class Schema
 
   public function addEnum($col, $options, $default = null)
   {
-    $def = array('null' => true);
+    $def = array('null' => true, 'length' => 255);
     if ($default) {
       $def['default'] = $default;
     }
@@ -153,9 +160,18 @@ class Schema
     );
   }
 
-  public function addText($col, $longtext = false)
+  /**
+   * Текстовое поле
+   * $size - размерность поля или true для longtext
+   */
+  public function addText($col, $size = false)
   {
-    return $this->add($col, static::COL_TEXT);
+    $opts = array('null' => true);
+    if ($size) {
+      $opts['limit'] = $size === true ? static::LONGTEXT : $size;
+    }
+
+    return $this->add($col, static::COL_TEXT, $opts);
   }
 
   public function addForeignKey($col, $schema, $foreign_id = null, $on_delete = null, $on_update = null)
@@ -205,6 +221,18 @@ class Schema
     );
 
     return $this;
+  }
+
+  /** Добавить поле для хранения файлов */
+  public function addFile($column)
+  {
+    return $this->add($column, static::COL_FILE, array('null' => true));
+  }
+
+  /** Добавить поле для хранения изображений */
+  public function addImage($column, array $size_arr = null)
+  {
+    return $this->add($column, static::COL_IMAGE, array('null' => true), $size_arr);
   }
 
   /** Связь один-к-многим */
@@ -509,6 +537,14 @@ class Schema
           $this->makeItemFloat($def, $func, $before, $after);
           break;
 
+        case self::COL_FILE:
+          $this->makeItemFile($def, $func, $before, $after);
+          break;
+
+        case self::COL_IMAGE:
+          $this->makeItemImage($def, $func, $before, $after);
+          break;
+
         default:
           $this->makeItemChar($def, $func, $before, $after);
       }
@@ -568,6 +604,159 @@ class Schema
 
     $func[] = $this->makeItemGetter($col);
     $func[] = $this->makeItemSetter($col);
+  }
+
+  protected function makeItemFile($def, &$func, &$before, &$after)
+  {
+    $col    = $def['column'];
+    $setter = Item::MakeSetterName($col);
+
+    $this->makeItemFileGetters($func, $col);
+
+    $func[] = "  /** Добавить файл \$file. \$name - оригинальное имя файла */\n"
+      . "  public function {$setter}(\$file, \$name = null)\n"
+      . "  {\n"
+      . "    \$name     = \$name ?: pathinfo(\$file, PATHINFO_BASENAME);\n"
+      . "    \$filename = \$this->makeFileName('{$col}', \$name);\n\n"
+      . "    return \$this->processFile('{$col}', \$file, \$filename, \$name);\n"
+      . "  }";
+  }
+
+  protected function makeItemImage($def, &$func, &$before, &$after)
+  {
+    $col      = $def['column'];
+    $size_arr = $def['options'];
+    $arr      = $size_arr ?: array(false);
+    $setter   = Item::MakeSetterName($col);
+
+    $process = false;
+    foreach ($arr as $size) {
+      $this->makeItemFileGetters($func, $col, true, $size);
+      $s = var_export($size, true);
+      $process .= "    \$filename = \$this->makeFileName('{$col}', \$name, {$s});\n";
+      $process .= "    \$this->processImage('{$col}', \$tmp, \$filename, \$name, {$s});\n\n";
+    }
+
+    $func[] = "  /** Добавить изображение \$file. \$name - оригинальное имя файла */\n"
+      . "  public function {$setter}(\$file, \$name = null)\n"
+      . "  {\n"
+      . "    \$name = \$name ?: pathinfo(\$file, PATHINFO_BASENAME);\n"
+      . "    \$tmp  = \$this->getFilesPath() . \$this->makeFileName('{$col}', \$name, 'temp');\n\n"
+      . "    \$this->copyFile(\$file, \$tmp);\n\n"
+      . $process
+      . "    unlink(\$tmp);\n\n"
+      . "    return \$this;\n"
+      . "  }";
+
+    $after[] = "  /**\n"
+      . "  * Метод для процессинга изображений {$col}.\n"
+      . "  * Должен вернуть объект Image или файл будет сохранен без изменений\n  */\n"
+      . "  protected function prepareImageFor" . StaticStringy::upperCamelize($col) . "(\$file, \$size)\n"
+      . "  {\n"
+      . "    \n"
+      . "  }";
+
+    if (!empty($size_arr)) {
+      $const = $names = false;
+      foreach ($size_arr as $size) {
+        $c = StaticStringy::toUpperCase(StaticStringy::underscored($col.' size '.$size));
+        $const[] = "  const {$c} = '{$size}';";
+        $names[] = "    self::{$c} => '{$size}',";
+      }
+
+      $before[] = join("\n", $const);
+      $before[] = "  protected static \${$col}_size_arr = array(\n" . join("\n", $names) . "\n  );";
+
+      $name_for = 'GetNameFor' . StaticStringy::upperCamelize($col) . 'Size';
+      $getter_arr = 'Get' . StaticStringy::upperCamelize($col) . 'SizeArr';
+
+      $after[] = "  public static function {$getter_arr}()\n"
+        . "  {\n"
+        . "    return static::\${$col}_size_arr;\n"
+        . "  }";
+      $after[] = "  public static function {$name_for}(\$size)\n"
+        . "  {\n"
+        . "    \$a = static::{$getter_arr}();\n\n"
+        . "    return isset(\$a[\$size]) ? \$a[\$size] : false;\n"
+        . "  }";
+    }
+  }
+
+  protected function makeItemFileGetters(&$func, $col, $is_image = false, $size = null)
+  {
+    $getter = Item::MakeGetterName($col);
+    if ($size) {
+      $getter .= StaticStringy::upperCamelize($size);
+      $func[] = "  /** Свойство файла */\n"
+        . "  public function {$getter}Param(\$param, \$default = false)\n"
+        . "  {\n"
+        . "    \$arr = \$this->getSerialized('{$col}');\n\n"
+        . "    return isset(\$arr['{$size}'][\$param]) ? \$arr['{$size}'][\$param] : \$default;\n"
+        . "  }";
+    } else {
+      $func[] = "  /** Свойство файла */\n"
+        . "  public function {$getter}Param(\$param, \$default = false)\n"
+        . "  {\n"
+        . "    \$arr = \$this->getSerialized('{$col}');\n\n"
+        . "    return isset(\$arr[\$param]) ? \$arr[\$param] : \$default;\n"
+        . "  }";
+    }
+
+    $func[] = "  /** Публичный путь к файлу */\n"
+      . "  public function {$getter}(\$default = false)\n"
+      . "  {\n"
+      . "    \$f = \$this->{$getter}Param('file');\n\n"
+      . "    return !empty(\$f) ? \$this->getPublicPath() . \$f : \$default;\n"
+      . "  }";
+    $func[] = "  /** Путь к файлу на сервере */\n"
+      . "  public function {$getter}Path(\$default = false)\n"
+      . "  {\n"
+      . "    \$f = \$this->{$getter}Param('file');\n\n"
+      . "    return !empty(\$f) ? \$this->getFilesPath() . \$f : \$default;\n"
+      . "  }";
+    $func[] = "  /** @return \\SQRT\\URL */\n"
+      . "  public function {$getter}Url(\$default = false)\n"
+      . "  {\n"
+      . "    \$f = \$this->{$getter}();\n\n"
+      . "    return \$f ? new \\SQRT\\URL(\$f) : \$default;\n"
+      . "  }";
+    $func[] = "  /** Размер файла. \$human - человеческое представление */\n"
+      . "  public function {$getter}Size(\$human = true)\n"
+      . "  {\n"
+      . "    if (!\$size = \$this->{$getter}Param('file')) {\n"
+      . "      return false;\n"
+      . "    }\n\n"
+      . "    return \$human ? \$this->getHumanFileSize(\$size) : \$size;\n"
+      . "  }";
+    $func[] = "  /** Название файла */\n"
+      . "  public function {$getter}Name(\$default = false)\n"
+      . "  {\n"
+      . "    return \$this->{$getter}Param('name', \$default);\n"
+      . "  }";
+    $func[] = "  /** Расширение файла */\n"
+      . "  public function {$getter}Extension(\$default = false)\n"
+      . "  {\n"
+      . "    return \$this->{$getter}Param('extension', \$default);\n"
+      . "  }";
+
+    if ($is_image) {
+      $func[] = "  /** Ширина изображения */\n"
+        . "  public function {$getter}Width(\$default = false)\n"
+        . "  {\n"
+        . "    return \$this->{$getter}Param('width', \$default);\n"
+        . "  }";
+      $func[] = "  /** Высота изображения */\n"
+        . "  public function {$getter}Height(\$default = false)\n"
+        . "  {\n"
+        . "    return \$this->{$getter}Param('height', \$default);\n"
+        . "  }";
+      $func[] = "  /** @return \\SQRT\\Tag\\Img */\n"
+        . "  public function {$getter}Img(\$alt = null, \$attr = null, \$default = false)\n"
+        . "  {\n"
+        . "    \$f = \$this->getPhotoThumb(\$default);\n\n"
+        . "    return \$f ? new \\SQRT\\Tag\\Img(\$f, \$this->{$getter}Width(), \$this->{$getter}Height(), \$alt, \$attr) : false;\n"
+        . "  }";
+    }
   }
 
   protected function makeItemTime($def, &$func, &$before, &$after)
@@ -682,8 +871,11 @@ class Schema
     $arr = $this->get($col);
 
     if ($arr['type'] == static::COL_ENUM) {
-      $arr['type']                 = static::COL_CHAR;
-      $arr['definition']['length'] = 255;
+      $arr['type'] = static::COL_CHAR;
+    }
+
+    if (in_array($arr['type'], array(static::COL_FILE, static::COL_IMAGE))) {
+      $arr['type'] = static::COL_TEXT;
     }
 
     $def = preg_replace('![\s]{2,}!', ' ', str_replace("\n", '', var_export($arr['definition'], true)));

@@ -7,10 +7,7 @@ use SQRT\DB\Collection;
 
 class ItemTest extends PHPUnit_Framework_TestCase
 {
-  function testBeforeSave()
-  {
-
-  }
+  protected $temp;
 
   function testChangePrimaryKey()
   {
@@ -34,7 +31,49 @@ class ItemTest extends PHPUnit_Framework_TestCase
 
   function testAddFile()
   {
+    $m = $this->getManager();
+    $i = new TestItem($m);
+    $i->setTable('pages');
+    $i->setPublicPath('/files');
+    $i->setFilesPath($this->temp);
 
+    $i->setFile(__FILE__);
+    $res = $i->getSerialized('file');
+
+    $this->assertNotEmpty($res['file'], 'Путь к файлу');
+    $this->assertFileExists($this->temp . $res['file'], 'Файл сохранился');
+    $this->assertEquals('php', $res['extension']);
+    $this->assertEquals(filesize(__FILE__), $res['size'], 'Размер верный');
+    $this->assertEquals('item.php', $res['name'], 'Название файла');
+  }
+
+  function testAddPhoto()
+  {
+    $m = $this->getManager();
+    $i = new TestItem($m);
+    $i->setTable('pages');
+    $i->setPublicPath('/files');
+    $i->setFilesPath($this->temp);
+
+    $i->setPhoto($this->temp . '/vertical.jpg');
+
+    $res = $i->getSerialized('photo');
+    $this->assertArrayHasKey('thumb', $res);
+    $this->assertArrayHasKey('big', $res);
+
+    $this->assertFileExists($this->temp . $res['big']['file'], 'Файл сохранился');
+    $this->assertEquals('jpg', $res['big']['extension'], 'Расширение');
+    $this->assertEquals(17890, $res['big']['size'], 'Размер');
+    $this->assertEquals('vertical.jpg', $res['big']['name'], 'Название');
+    $this->assertEquals(225, $res['big']['width'], 'Ширина');
+    $this->assertEquals(300, $res['big']['height'], 'Высота');
+
+    $this->assertFileExists($this->temp . $res['thumb']['file'], 'Файл сохранился');
+    $this->assertEquals('jpg', $res['thumb']['extension'], 'Расширение');
+    $this->assertEquals(3606, $res['thumb']['size'], 'Размер');
+    $this->assertEquals('vertical.jpg', $res['thumb']['name'], 'Название');
+    $this->assertEquals(99, $res['thumb']['width'], 'Ширина');
+    $this->assertEquals(100, $res['thumb']['height'], 'Высота');
   }
 
   function testSave()
@@ -201,6 +240,12 @@ class ItemTest extends PHPUnit_Framework_TestCase
 
     $this->assertEquals(serialize($arr), $i->get('gender', false, false), 'Данные хранятся в сериализованной строке');
     $this->assertEquals($arr, $i->getSerialized('gender'), 'Десериализация');
+
+    $i->set('gender', false);
+    $this->assertEquals($arr, $i->getSerialized('gender'), 'Десериализация закеширована');
+
+    $i->resetSerializedCache();
+    $this->assertFalse($i->getSerialized('gender'), 'Кеширование сброшено');
   }
 
   function testMakeNames()
@@ -236,6 +281,8 @@ class ItemTest extends PHPUnit_Framework_TestCase
 
   protected function setUp()
   {
+    $this->temp = realpath(__DIR__ . '/../tmp');
+
     $q = 'CREATE TABLE `test_pages` ('
       . '`id` int(10) unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,'
       . '`name` VARCHAR(250),'
@@ -253,6 +300,50 @@ class ItemTest extends PHPUnit_Framework_TestCase
 
 class TestItem extends \SQRT\DB\Item
 {
+  /** Эквивалент генерируемой функции */
+  public function setFile($file, $name = null)
+  {
+    $name     = $name ?: pathinfo($file, PATHINFO_BASENAME);
+    $filename = $this->makeFileName('file', $name);
+
+    return $this->processFile('file', $file, $filename, $name);
+  }
+
+  /** Эквивалент генерируемой функции */
+  public function setPhoto($file, $name = null)
+  {
+    $name = $name ?: pathinfo($file, PATHINFO_BASENAME);
+    $tmp  = $this->getFilesPath() . $this->makeFileName('photo', $name, 'temp');
+
+    $this->copyFile($file, $tmp);
+
+    $filename = $this->makeFileName('photo', $name, 'thumb');
+    $this->processImage('photo', $tmp, $filename, $name, 'thumb');
+
+    $filename = $this->makeFileName('photo', $name, 'big');
+    $this->processImage('photo', $tmp, $filename, $name, 'big');
+
+    unlink($tmp);
+
+    return $this;
+  }
+
+  /**
+   * Метод для процессинга изображений photo.
+   * Должен вернуть объект Image или файл будет сохранен без изменений
+   */
+  protected function prepareImageForPhoto($file, $size)
+  {
+    $img = new \SQRT\Image($file);
+    if ($size == 'thumb') {
+      $img->cropResized(100, 100);
+    } else {
+      $img->resize(400, 300);
+    }
+
+    return $img;
+  }
+
   protected function beforeSave()
   {
     $this->set('id', 10);

@@ -6,6 +6,8 @@ use SQRT\DB\Schema;
 
 class schemaTest extends PHPUnit_Framework_TestCase
 {
+  protected $temp;
+
   function testAddColumns()
   {
     $m = $this->getManager(null, false);
@@ -43,37 +45,15 @@ class schemaTest extends PHPUnit_Framework_TestCase
       ->addChar('name')
       ->addEnum('type', array('one', 'two'))
       ->addFloat('price')
-      ->addText('text');
+      ->addText('text', true)
+      ->addFile('image');
 
-    $exp = <<<PHP
-<?php
+    $exp  = file_get_contents($this->temp . '/MigrationCreate.php');
+    $name = 'my migration';
+    $res  = $s->makeMigration($name);
 
-use Phinx\Migration\AbstractMigration;
+//    file_put_contents($this->temp . '/MigrationCreate.php', $s->makeMigration($name));
 
-class MyMigration extends AbstractMigration
-{
-  public function up()
-  {
-    \$tbl = \$this->table('test_users', array('id' => 'id'));
-    \$tbl->addColumn("is_active", "boolean", array ( 'default' => 0,));
-    \$tbl->addColumn("age", "integer", array ( 'length' => 10, 'default' => 0, 'signed' => true,));
-    \$tbl->addColumn("name", "string", array ( 'length' => 255, 'null' => true,));
-    \$tbl->addColumn("type", "string", array ( 'null' => true, 'length' => 255,));
-    \$tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
-    \$tbl->addColumn("text", "text");
-    \$tbl->save();
-  }
-
-  public function down()
-  {
-    \$tbl = \$this->table('test_users', array('id' => 'id'));
-    \$tbl->drop();
-  }
-}
-
-PHP;
-
-    $res = $s->makeMigration('my migration');
     $this->assertEquals($exp, $res, 'Генерация файла миграции');
   }
 
@@ -87,35 +67,12 @@ PHP;
       ->addBool('is_active')
       ->addFloat('price');
 
-    $exp = <<<PHP
-<?php
+    $exp  = file_get_contents($this->temp . '/MigrationUpdate.php');
+    $name = 'my migration';
+    $res  = $s->makeMigration($name);
 
-use Phinx\Migration\AbstractMigration;
+//    file_put_contents($this->temp . '/MigrationUpdate.php', $s->makeMigration($name));
 
-class MyMigration extends AbstractMigration
-{
-  public function up()
-  {
-    \$tbl = \$this->table('test_pages', array('id' => 'id'));
-    \$tbl->addColumn("is_active", "boolean", array ( 'default' => 0,));
-    \$tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
-    \$tbl->removeColumn("name");
-    \$tbl->save();
-  }
-
-  public function down()
-  {
-    \$tbl = \$this->table('test_pages', array('id' => 'id'));
-    \$tbl->removeColumn("is_active");
-    \$tbl->removeColumn("price");
-    // TODO: добавить инструкции для создания столбца name
-    \$tbl->save();
-  }
-}
-
-PHP;
-
-    $res = $s->makeMigration('my migration');
     $this->assertEquals($exp, $res, 'Генерация файла миграции');
   }
 
@@ -128,34 +85,12 @@ PHP;
     $s->addChar('name')
       ->addFloat('price');
 
-    $exp = <<< PHP
-<?php
+    $exp  = file_get_contents($this->temp . '/MigrationNoID.php');
+    $name = 'my migration';
+    $res  = $s->makeMigration($name);
 
-use Phinx\Migration\AbstractMigration;
+//    file_put_contents($this->temp . '/MigrationNoID.php', $s->makeMigration($name));
 
-class MyMigration extends AbstractMigration
-{
-  public function up()
-  {
-    \$tbl = \$this->table('test_pages', array('id' => false));
-    \$tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
-    \$tbl->removeColumn("id");
-    \$tbl->changeColumn("name", "string", array ( 'length' => 255, 'null' => true,));
-    \$tbl->save();
-  }
-
-  public function down()
-  {
-    \$tbl = \$this->table('test_pages', array('id' => false));
-    \$tbl->removeColumn("price");
-    // TODO: добавить инструкции для создания столбца id
-    \$tbl->save();
-  }
-}
-
-PHP;
-
-    $res = $s->makeMigration('my migration');
     $this->assertEquals($exp, $res, 'Схема без ID');
   }
 
@@ -169,32 +104,12 @@ PHP;
       ->addIndex('age')
       ->addUniqueIndex('token', 'age');
 
-    $exp = <<< PHP
-<?php
+    $exp  = file_get_contents($this->temp . '/MigrationIndexes.php');
+    $name = 'my migration';
+    $res  = $s->makeMigration($name);
 
-use Phinx\Migration\AbstractMigration;
+//    file_put_contents($this->temp . '/MigrationIndexes.php', $s->makeMigration($name));
 
-class MyMigration extends AbstractMigration
-{
-  public function up()
-  {
-    \$tbl = \$this->table('test_users', array('id' => 'token'));
-    \$tbl->addColumn("age", "integer", array ( 'length' => 10, 'default' => 0, 'signed' => true,));
-    \$tbl->addIndex(array("age"));
-    \$tbl->addIndex(array("token", "age"), array("unique" => true));
-    \$tbl->save();
-  }
-
-  public function down()
-  {
-    \$tbl = \$this->table('test_users', array('id' => 'token'));
-    \$tbl->drop();
-  }
-}
-
-PHP;
-
-    $res = $s->makeMigration('my migration');
     $this->assertEquals($exp, $res, 'Индекс');
   }
 
@@ -217,32 +132,11 @@ PHP;
       ->addInt('author_id')
       ->addForeignKey('author_id', $a, null, Schema::FK_RESTRICT, Schema::FK_CASCADE);
 
-    $exp = <<< PHP
-<?php
-
-use Phinx\Migration\AbstractMigration;
-
-class ForeignKey extends AbstractMigration
-{
-  public function up()
-  {
-    \$tbl = \$this->table('test_books', array('id' => 'id'));
-    \$tbl->addColumn("author_id", "integer", array ( 'length' => 10, 'default' => 0, 'signed' => true,));
-    \$tbl->addForeignKey("author_id", "test_authors", "id", array("delete" => "RESTRICT", "update" => "CASCADE"));
-    \$tbl->save();
-  }
-
-  public function down()
-  {
-    \$tbl = \$this->table('test_books', array('id' => 'id'));
-    \$tbl->drop();
-  }
-}
-
-PHP;
-
+    $exp  = file_get_contents($this->temp . '/MigrationForeignKey.php');
     $name = 'foreign_key';
-    $res = $s->makeMigration($name);
+    $res  = $s->makeMigration($name);
+
+//    file_put_contents($this->temp . '/MigrationForeignKey.php', $s->makeMigration($name));
 
     $this->assertEquals($exp, $res, 'Внешний ключ');
   }
@@ -276,174 +170,26 @@ PHP;
       ->addInt('age')
       ->addChar('name')
       ->addFloat('price')
-      ->addTime('created_at');
+      ->addTime('created_at')
+      ->addFile('pdf')
+      ->addImage('avatar')
+      ->addImage('photo', array('thumb', 'big'));
 
-    $exp = <<<PHP
-<?php
+    $exp = file_get_contents($this->temp . '/UsersCollection.php');
 
-namespace Collection;
-
-/**
- * Этот файл сгенерирован автоматически по схеме Users
- *
- * @method \User findOne(\$where = null) Найти и получить один объект
- * @method \User make() Создать новый объект
- * @method \User fetchObject(\PDOStatement \$statement) Получение объекта из запроса
-*/
-class Users extends \Base\Collection
-{
-  protected function init()
-  {
-    \$this->setItemClass('\User');
-    \$this->setTable('users');
-  }
-}
-
-PHP;
-
+//    file_put_contents($this->temp . '/UsersCollection.php', $s->makeCollection());
     $this->assertEquals($exp, $s->makeCollection(), 'Коллекция');
 
-    $exp = <<< PHP
-<?php
+    $exp = file_get_contents($this->temp . '/UserItem.php');
 
-namespace ORM;
-
-use SQRT\DB\Exception;
-
-/** Этот файл сгенерирован автоматически по схеме Users */
-abstract class User extends \Base\Item
-{
-  const TYPE_NEW = 'new';
-  const TYPE_OLD = 'old';
-
-  protected static \$type_arr = array(
-    self::TYPE_NEW => 'new',
-    self::TYPE_OLD => 'old',
-  );
-
-  protected function init()
-  {
-    \$this->setPrimaryKey('id');
-    \$this->setTable('users');
-    \$this->setFields(
-      array(
-        'id',
-        'is_active',
-        'type',
-        'age',
-        'name',
-        'price',
-        'created_at',
-      )
-    );
-  }
-
-  public function getId(\$default = null)
-  {
-    return \$this->get('id', \$default);
-  }
-
-  /** @return static */
-  public function setId(\$id)
-  {
-    return \$this->set('id', \$id);
-  }
-
-  public function getIsActive(\$default = null)
-  {
-    return (int)\$this->get('is_active', \$default);
-  }
-
-  /** @return static */
-  public function setIsActive(\$is_active)
-  {
-    return \$this->set('is_active', (int)\$is_active);
-  }
-
-  public function getType(\$default = null)
-  {
-    return \$this->get('type', \$default);
-  }
-
-  public function getTypeName()
-  {
-    return static::GetNameForType(\$this->getType());
-  }
-
-  /** @return static */
-  public function setType(\$type)
-  {
-    if (!empty(\$type) && !static::GetNameForType(\$type)) {
-      Exception::ThrowError(Exception::ENUM_BAD_VALUE, 'type', \$type);
-    }
-
-    return \$this->set('type', \$type);
-  }
-
-  public function getAge(\$default = null)
-  {
-    return (int)\$this->get('age', \$default);
-  }
-
-  /** @return static */
-  public function setAge(\$age)
-  {
-    return \$this->set('age', (int)\$age);
-  }
-
-  public function getName(\$default = null)
-  {
-    return \$this->get('name', \$default);
-  }
-
-  /** @return static */
-  public function setName(\$name)
-  {
-    return \$this->set('name', \$name);
-  }
-
-  public function getPrice(\$default = false, \$decimals = null, \$point = null, \$thousands = null)
-  {
-    return \$this->getAsFloat('price', \$default, \$decimals, \$point, \$thousands);
-  }
-
-  /** @return static */
-  public function setPrice(\$price)
-  {
-    return \$this->set('price', \$price);
-  }
-
-  public function getCreatedAt(\$default = false, \$format = null)
-  {
-    return \$this->getAsDate('created_at', \$default, \$format);
-  }
-
-  /** @return static */
-  public function setCreatedAt(\$created_at)
-  {
-    return \$this->setAsDate('created_at', \$created_at);
-  }
-
-  public static function GetTypeArr()
-  {
-    return static::\$type_arr;
-  }
-
-  public static function GetNameForType(\$type)
-  {
-    \$a = static::GetTypeArr();
-
-    return isset(\$a[\$type]) ? \$a[\$type] : false;
-  }
-}
-
-PHP;
-
+//    file_put_contents($this->temp . '/UserItem.php', $s->makeItem());
     $this->assertEquals($exp, $s->makeItem(), 'Item');
   }
 
   protected function setUp()
   {
+    $this->temp = realpath(__DIR__ . '/../tmp');
+
     $m = $this->getManager();
     $m->query('CREATE TABLE `test_pages` (`id` int(10) unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT, `name` VARCHAR(250))');
   }

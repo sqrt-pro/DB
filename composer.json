@@ -1,6 +1,6 @@
 {
     "name": "sqrt-pro/db",
-    "description": "SQRT.pro DB is part of SQRT Framework",
+    "description": "DB is part of SQRT Framework",
     "homepage": "http://fw.sqrt.pro",
     "type": "library",
     "license": "MIT",
@@ -9,6 +9,8 @@
         "sqrt-pro/exception": "dev-master",
         "sqrt-pro/query-builder": "dev-master",
         "sqrt-pro/helpers": "dev-master",
+        "sqrt-pro/image": "dev-master",
+        "sqrt-pro/url": "dev-master",
         "danielstjules/stringy": "dev-master",
         "robmorgan/phinx": "*"
     },

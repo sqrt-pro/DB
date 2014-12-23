@@ -7,6 +7,16 @@ use SQRT\DB\Collection;
 
 class CollectionTest extends PHPUnit_Framework_TestCase
 {
+  function testSort()
+  {
+
+  }
+
+  function testEach()
+  {
+
+  }
+
   function testCount()
   {
     $m = $this->getManager();
