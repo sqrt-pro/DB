@@ -112,6 +112,18 @@ class Collection implements \IteratorAggregate, \Countable
     return count($this->items);
   }
 
+  /** Проверка что в коллекции нет элементов */
+  public function isEmpty()
+  {
+    return $this->count() == 0;
+  }
+
+  /** Проверка что в коллекции нет элементов */
+  public function isNotEmpty()
+  {
+    return $this->count() > 0;
+  }
+
   /** Количество элементов по запросу */
   public function countQuery($where = null)
   {
@@ -181,9 +193,11 @@ class Collection implements \IteratorAggregate, \Countable
   }
 
   /** @return Item[] */
-  public function getIterator()
+  public function getIterator($as_array = false)
   {
-    return new \ArrayIterator($this->items ?: array());
+    $arr = $this->items ?: array();
+
+    return $as_array ? $arr : new \ArrayIterator($arr);
   }
 
   public function getTable()
@@ -229,7 +243,7 @@ class Collection implements \IteratorAggregate, \Countable
   /** @return static */
   public function setItems($items)
   {
-    $this->items = $items;
+    $this->items = $items instanceof Collection ? $items->getIterator(true) : $items;
 
     return $this;
   }

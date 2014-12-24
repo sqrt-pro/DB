@@ -7,6 +7,85 @@ use SQRT\DB\Schema;
 class schemaTest extends PHPUnit_Framework_TestCase
 {
   protected $temp;
+  protected $last_migr;
+
+  function testRelations()
+  {
+    $m = $this->getManager('test_');
+
+    // Создание схем
+    $authors = new Schema($m);
+    $authors
+      ->setTable('authors')
+      ->addId()
+      ->addChar('name');
+
+    $books = new Schema($m);
+    $books
+      ->setName('Books')
+      ->addId()
+      ->addChar('name');
+
+    $tags = new Schema($m);
+    $tags
+      ->setTable('tags')
+      ->addId()
+      ->addChar('name');
+
+    // Расстановка ключей
+
+    $books_tags = new Schema($m);
+    $books_tags
+      ->setTable('books_tags')
+      ->addOneToOne('book_id', $books, null, Schema::FK_CASCADE)
+      ->addOneToOne('tag_custom_id', $tags);
+
+    $authors->addOneToMany($books, 'author_id');
+
+    $books
+      ->addOneToOne('author_id', $authors, null, Schema::FK_RESTRICT, Schema::FK_CASCADE)
+      ->addManyToMany($tags, $books_tags, 'tag_custom_id');
+
+    $tags->addManyToMany($books, $books_tags, null, 'tag_custom_id');
+
+    // Генерация миграций
+
+//    $this->saveMigr($authors, 'new authors');
+//    $this->saveMigr($books, 'new books');
+//    $this->saveMigr($tags, 'new tags');
+//    $this->saveMigr($books_tags, 'new books tags');
+
+    $exp  = file_get_contents($this->temp . '/MigrationAuthors.php');
+    $res  = $authors->makeMigration('new authors');
+    $this->assertEquals($exp, $res, 'Генерация миграции Authors');
+
+    $exp  = file_get_contents($this->temp . '/MigrationBooks.php');
+    $res  = $books->makeMigration('new books');
+    $this->assertEquals($exp, $res, 'Генерация миграции Books');
+
+    $exp  = file_get_contents($this->temp . '/MigrationTags.php');
+    $res  = $tags->makeMigration('new tags');
+    $this->assertEquals($exp, $res, 'Генерация миграции Tags');
+
+    $exp  = file_get_contents($this->temp . '/MigrationBooksTags.php');
+    $res  = $books_tags->makeMigration('new books tags');
+    $this->assertEquals($exp, $res, 'Генерация миграции BooksTags');
+
+    // Генерация модели
+
+//    file_put_contents($this->temp . '/AuthorItem.php', $authors->makeItem());
+//    file_put_contents($this->temp . '/BookItem.php', $books->makeItem());
+//    file_put_contents($this->temp . '/TagItem.php', $tags->makeItem());
+
+    $exp = file_get_contents($this->temp . '/AuthorItem.php');
+    $this->assertEquals($exp, $authors->makeItem(), 'Author Item');
+
+    $exp = file_get_contents($this->temp . '/BookItem.php');
+    $this->assertEquals($exp, $books->makeItem(), 'Book Item');
+
+    $exp = file_get_contents($this->temp . '/TagItem.php');
+    $this->assertEquals($exp, $tags->makeItem(), 'Tag Item');
+  }
 
   function testAddColumns()
   {
@@ -141,21 +220,31 @@ class schemaTest extends PHPUnit_Framework_TestCase
     $this->assertEquals($exp, $res, 'Внешний ключ');
   }
 
-  function testItemClass()
+  function testNamesAndClass()
   {
     $m = $this->getManager('test_');
 
     $s = new Schema($m);
     $s->setName('Users');
 
-    $this->assertEquals('User', $s->getItemClass(), 'Название сгенерировалось из названия схемы');
+    $this->assertEquals('users', $s->getTable(), 'Таблица сгенерировалась из названия');
+    $this->assertEquals('\User', $s->getItemClass(), 'Название сгенерировалось из названия схемы');
+    $this->assertEquals('\User', $s->getItemClass(), 'Название без неймспейса');
 
     $s->setName('Schedule');
-    $this->assertEquals('Schedule', $s->getItemClass(), 'Нет s на конце');
+    $this->assertEquals('\Schedule', $s->getItemClass(), 'Нет s на конце');
 
     $s->setName('News');
+    $s->setItemClass('\My\Good\News');
+    $this->assertEquals('\My\Good\News', $s->getItemClass(), 'Явно заданное имя класса');
+    $this->assertEquals('News', $s->getItemClass(false), 'Явно заданное имя класса без неймспейса');
+
     $s->setItemClass('News');
-    $this->assertEquals('News', $s->getItemClass(), 'Явно заданное имя класса');
+    $this->assertEquals('News', $s->getItemClass(false), 'Класс без неймспейсов');
+
+    $s = new Schema($m, 'user_books');
+    $this->assertEquals('UserBooks', $s->getName(), 'Название сгенерировалось из таблицы');
+    $this->assertEquals('\UserBook', $s->getItemClass(), 'Класс сгенерился из таблицы');
   }
 
   function testMakeItemAndCollection()
@@ -202,9 +291,11 @@ class schemaTest extends PHPUnit_Framework_TestCase
     $m->query('DROP TABLE IF EXISTS `phinxlog`');
   }
 
-  protected function saveMigr($res, Schema $s, $name = 'my migration')
+  protected function saveMigr(Schema $s, $name = 'my migration')
   {
-    file_put_contents(TEST_MIGR . '/' . $s->makeMigrationName($name), $res);
+    $this->last_migr++;
+
+    file_put_contents(TEST_MIGR . '/' . $s->makeMigrationName($name, $this->last_migr), $s->makeMigration($name));
   }
 
   protected function getManager($prefix = null, $conn = true)

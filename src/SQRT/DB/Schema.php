@@ -58,10 +58,17 @@ class Schema
   protected $foreign_keys;
   protected $actual_columns;
 
-  function __construct(Manager $manager)
+  function __construct(Manager $manager, $table = null, $name = null)
   {
     $this->setManager($manager);
-    $this->setName(__CLASS__);
+
+    if ($table) {
+      $this->setTable($table);
+    }
+
+    if ($name) {
+      $this->setName($name);
+    }
 
     $this->init();
   }
@@ -105,11 +112,14 @@ class Schema
 
   public function addInt($col, $default = 0, $signed = true, $length = 10)
   {
-    return $this->add(
-      $col,
-      static::COL_INT,
-      array('length' => $length, 'default' => $default, 'signed' => $signed)
-    );
+    $opts = array('length' => $length, 'signed' => $signed);
+    if (!is_null($default)) {
+      $opts['default'] = $default;
+    } else {
+      $opts['null'] = true;
+    }
+
+    return $this->add($col, static::COL_INT, $opts);
   }
 
   public function addBool($col)
@@ -235,66 +245,87 @@ class Schema
     return $this->add($column, static::COL_IMAGE, array('null' => true), $size_arr);
   }
 
-  /** Связь один-к-многим */
-  public function addOneToMany($col, $schema, $foreign_id = null)
+  /** Связь один-к-одному */
+  public function addOneToOne($col, $schema, $foreign_id = null, $on_delete = null, $on_update = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
     $t = $s->getTable();
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
-      // Exception
+      Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
     }
 
-    $this->addInt($col, 'NULL');
-    $this->addForeignKey($col, $s, $foreign_id);
+    $this->addInt($col, NULL, true, 11);
+    $this->addForeignKey($col, $s, $foreign_id, $on_delete, $on_update);
 
     $this->relations[$t] = array(
-      'type'       => static::RELATION_ONE_TO_MANY,
+      'type'       => static::RELATION_ONE_TO_ONE,
       'column'     => $col,
-      'schema'     => $s->getName(),
-      'foreign_id' => $foreign_id
+      'schema'     => $s,
+      'foreign_id' => $foreign_id,
     );
 
     return $this;
   }
 
-  /** Связь один-к-одному */
-  public function addOneToOne($col, $schema, $foreign_id = null)
+  /**
+   * Связь многие-к-многим через внешнюю таблицу
+   * Если внешняя таблица $join_table не указана - название формируется из названий двух таблиц
+   * $foreign_col - столбец запрашиваемого объекта в объединяющей-таблице
+   * $my_col - столбец текущего объекта в объединяющей-таблице
+   * $foreign_id - столбец Primary Key в таблице запрашиваемого объекта
+   * $my_id - столбец Primary Key в таблице текущего объекта
+   */
+  public function addManyToMany($schema, $join_table = null, $foreign_col = null, $my_col = null, $foreign_id = null, $my_id = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
     $t = $s->getTable();
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
-      // Exception
+      Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
     }
 
-    $this->addInt($col, 'NULL');
-    $this->addForeignKey($col, $s, $foreign_id);
+    if ($join_table instanceof Schema) {
+      $join_table = $join_table->getTable();
+    }
+
+    if (!$join_table) {
+      $arr = array($this->getName(), $schema->getName());
+      asort($arr);
+      $join_table = StaticStringy::underscored(join(' ', $arr));
+    }
 
     $this->relations[$t] = array(
-      'type'       => static::RELATION_ONE_TO_ONE,
-      'column'     => $col,
-      'schema'     => $s->getName(),
-      'foreign_id' => $foreign_id
+      'type'        => static::RELATION_MANY_TO_MANY,
+      'column'      => $my_col ?: StaticStringy::underscored($this->getItemClass(false) . '_id'),
+      'schema'      => $s,
+      'foreign_id'  => $foreign_id,
+      'foreign_col' => $foreign_col ?: StaticStringy::underscored($s->getItemClass(false) . '_id'),
+      'my_id'       => $my_id ?: $this->getPrimaryKey(),
+      'table'       => $join_table,
     );
 
     return $this;
   }
 
   /** Связь многие-к-многим через внешнюю таблицу */
-  public function addManyToMany($schema, $my_col)
+  public function addOneToMany($schema, $foreign_id, $col = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
     $t = $s->getTable();
 
+    if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
+      Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
+    }
+
     $this->relations[$t] = array(
-      'type'       => static::RELATION_ONE_TO_ONE,
-      'column'     => $my_col,
-      'schema'     => $s->getName(),
-      'foreign_id' => null,
+      'type'       => static::RELATION_ONE_TO_MANY,
+      'column'     => $col ?: $this->getPrimaryKey(),
+      'schema'     => $s,
+      'foreign_id' => $foreign_id,
     );
 
     return $this;
@@ -376,7 +407,7 @@ class Schema
   /** Имя таблицы */
   public function getTable()
   {
-    return $this->table;
+    return $this->table ?: StaticStringy::underscored($this->name);
   }
 
   /** Имя таблицы */
@@ -390,7 +421,7 @@ class Schema
   /** Название схемы */
   public function getName()
   {
-    return $this->name;
+    return $this->name ?: StaticStringy::upperCamelize($this->table);
   }
 
   /** Название схемы */
@@ -402,9 +433,11 @@ class Schema
   }
 
   /** Класс для Item */
-  public function getItemClass()
+  public function getItemClass($with_namespace = true)
   {
-    return $this->item_class ?: StaticStringy::removeRight($this->getName(), 's');
+    $cl = $this->item_class ?: '\\' . StaticStringy::removeRight($this->getName(), 's');
+
+    return $with_namespace ? $cl : array_pop(explode('\\', $cl));
   }
 
   /**
@@ -419,9 +452,9 @@ class Schema
   }
 
   /** Создание имени для миграции */
-  public function makeMigrationName($name)
+  public function makeMigrationName($name, $num = null)
   {
-    return date('YmdHis') . '_' . StaticStringy::slugify($name, '_') . '.php';
+    return ($num ?: date('YmdHis')) . '_' . StaticStringy::slugify($name, '_') . '.php';
   }
 
   /** Генерация миграции */
@@ -509,6 +542,7 @@ class Schema
     $before = $after = $func = '';
     $fields_arr = array_keys($this->columns);
 
+    // Если первичного ключа нет в списке полей
     if ($pk = $this->getPrimaryKey()) {
       if (!isset($this->columns[$pk])) {
         array_unshift($fields_arr, $pk);
@@ -517,6 +551,7 @@ class Schema
       }
     }
 
+    // Геттеры\Сеттеры
     foreach ($this->columns as $col => $def) {
       switch ($def['type']) {
         case self::COL_BOOL:
@@ -550,29 +585,195 @@ class Schema
       }
     }
 
-    $fields = join("',\n        '", $fields_arr);
+    // Связи
+    if (!empty($this->relations)) {
+      foreach ($this->relations as $rel) {
+        switch ($rel['type']) {
+          case static::RELATION_ONE_TO_ONE:
+            $this->makeItemOneToOne($rel, $func, $before, $after);
+            break;
 
+          case static::RELATION_ONE_TO_MANY:
+            $this->makeItemOneToMany($rel, $func, $before, $after);
+            break;
+
+          case static::RELATION_MANY_TO_MANY:
+            $this->makeItemManyToMany($rel, $func, $before, $after);
+            break;
+        }
+      }
+    }
+
+    // Генерация кода класса
     $str = "<?php\n\nnamespace $namespace;\n\n"
       . "use SQRT\\DB\\Exception;\n\n"
       . "/** Этот файл сгенерирован автоматически по схеме {$this->getName()} */\n"
-      . "abstract class " . $this->getItemClass() . " extends " . $this->getItemBaseClass() . "\n"
+      . "abstract class " . $this->getItemClass(false) . " extends " . $this->getItemBaseClass() . "\n"
       . "{\n"
       . ($before ? join("\n\n", $before) . "\n\n" : '')
       . "  protected function init()\n"
       . "  {\n"
       . "    \$this->setPrimaryKey(" . var_export($pk, true) . ");\n"
-      . "    \$this->setTable('users');\n"
+      . "    \$this->setTable('" . $this->getTable() . "');\n"
       . "    \$this->setFields(\n"
       . "      array(\n"
-      . "        '$fields',\n"
+      . "        '" . join("',\n        '", $fields_arr) . "',\n"
       . "      )\n"
       . "    );\n"
       . "  }\n\n"
-      . ($func ? join("\n\n", $func) : '')
-      . ($after ? "\n\n" . join("\n\n", $after) . "\n" : '')
+      . ($func ? join("\n\n", $func) . "\n" : '')
+      . ($after ? "\n" . join("\n\n", $after) . "\n" : '')
       . "}\n";
 
     return $str;
+  }
+
+  protected function makeItemOneToOne($relation, &$func, &$before, &$after)
+  {
+    /** @var $schema Schema */
+    $schema = $relation['schema'];
+    $col    = $relation['column'];
+    $fk     = $relation['foreign_id'];
+
+    $schema_name = $schema->getName();
+    $item        = $schema->getItemClass();
+    $name        = StaticStringy::underscored($schema->getItemClass(false));
+    $getter      = StaticStringy::camelize('get ' . $name);
+    $setter      = StaticStringy::camelize('set ' . $name);
+
+    $before[] = "  /** @var {$item} */\n"
+      . "  protected \${$name};";
+
+    $func[] = "  /** @return {$item} */\n"
+      . "  public function {$getter}(\$reload = false)\n"
+      . "  {\n"
+      . "    if (!\$id = \$this->get('{$col}')) {\n"
+      . "      return false;\n"
+      . "    }\n\n"
+      . "    if (is_null(\$this->{$name}) || \$reload) {\n"
+      . "      \$c = \$this->getManager()->getCollection('{$schema_name}');\n\n"
+      . "      \$this->{$name} = \$c->findOne(array('{$fk}' => \$id));\n"
+      . "    }\n\n"
+      . "    return \$this->{$name};\n"
+      . "  }";
+    $func[] = "  /** @return static */\n"
+      . "  public function {$setter}({$item} \${$name})\n"
+      . "  {\n"
+      . "    \$this->{$name} = \${$name};\n\n"
+      . "    return \$this->set('{$col}', \${$name}->get('{$fk}'));\n"
+      . "  }";
+  }
+
+  protected function makeItemOneToMany($relation, &$func, &$before, &$after)
+  {
+    /** @var $schema Schema */
+    $schema = $relation['schema'];
+    $col    = $relation['column'];
+    $fk     = $relation['foreign_id'];
+
+    $schema_name = $schema->getName();
+    $item        = $schema->getItemClass();
+    $name        = StaticStringy::underscored($schema_name);
+    $var         = $name . '_arr';
+    $getter      = StaticStringy::camelize('get ' . $name);
+    $setter      = StaticStringy::camelize('set ' . $name);
+
+    $before[] = "  /** @var \\SQRT\\DB\\Collection|{$item}[] */\n"
+      . "  protected \${$var};";
+
+    $func[] = "  /** @return \\SQRT\\DB\\Collection|{$item}[] */\n"
+      . "  public function {$getter}(\$reload = false)\n"
+      . "  {\n"
+      . "    \$c = \$this->getManager()->getCollection('{$schema_name}');\n\n"
+      . "    if (is_null(\$this->{$var}) || \$reload) {\n"
+      . "      \$this->{$var} = \$c->find(array('{$fk}' => \$this->get('{$col}')))->getIterator(true);\n"
+      . "    }\n\n"
+      . "    return \$c->setItems(\$this->{$var});\n"
+      . "  }";
+
+    $func[] = "  /** @return static */\n"
+      . "  public function {$setter}(\${$var} = null)\n"
+      . "  {\n"
+      . "    \$this->{$var} = \${$var};\n\n"
+      . "    return \$this;\n"
+      . "  }";
+  }
+
+  protected function makeItemManyToMany($relation, &$func, &$before, &$after)
+  {
+    /** @var $schema Schema */
+    $schema = $relation['schema'];
+    $my_col = $relation['column'];
+    $my_id  = $relation['my_id'];
+    $table  = $relation['table'];
+
+    $foreign_id  = $relation['foreign_id'];
+    $foreign_col = $relation['foreign_col'];
+
+    $schema_name = $schema->getName();
+    $schema_tbl  = $schema->getTable();
+    $item        = $schema->getItemClass();
+    $name        = StaticStringy::underscored($schema_name);
+    $one         = StaticStringy::underscored($schema->getItemClass(false));
+    $var         = $name . '_arr';
+    $getter      = StaticStringy::camelize('get ' . $name);
+    $setter      = StaticStringy::camelize('set ' . $name);
+    $adder       = StaticStringy::camelize('add ' . $one);
+    $remover     = StaticStringy::camelize('remove ' . $one);
+    $all_remover = StaticStringy::camelize('remove all ' . $schema_name);
+
+    $before[] = "  /** @var \\SQRT\\DB\\Collection|{$item}[] */\n"
+      . "  protected \${$var};";
+
+    $func[] = "  /** @return \\SQRT\\DB\\Collection|{$item}[] */\n"
+      . "  public function {$getter}(\$reload = false)\n"
+      . "  {\n"
+      . "    \$m = \$this->getManager();\n"
+      . "    \$c = \$m->getCollection('{$schema_name}');\n\n"
+      . "    if (is_null(\$this->{$var}) || \$reload) {\n"
+      . "      \$q = \$m->getQueryBuilder()\n"
+      . "        ->select('{$schema_tbl} t')\n"
+      . "        ->columns('t.*')\n"
+      . "        ->join('{$table} j', 't.{$foreign_id} = j.{$foreign_col}')\n" //->join('books_tags j', 't.id = j.tag_custom_id')
+      . "        ->where(array('j.{$my_col}' => \$this->get('{$my_id}')));\n"
+      . "      \n"
+      . "      \$this->{$var} = \$c->fetch(\$q)->getIterator(true);\n"
+      . "    }\n\n"
+      . "    return \$c->setItems(\$this->{$var});\n"
+      . "  }";
+
+    $func[] = "  public function {$adder}(\${$one})\n"
+      . "  {\n"
+      . "    \$id = \${$one} instanceof {$item} ? \${$one}->get('{$foreign_id}') : \${$one};\n"
+      . "    \$m  = \$this->getManager();\n"
+      . "    \$qb = \$m->getQueryBuilder();\n"
+      . "    \$qb->insert('{$table}')\n"
+      . "      ->setEqual('{$foreign_col}', \$id)\n"
+      . "      ->setEqual('{$my_col}', \$this->get('{$my_id}'));\n"
+      . "    \$m->query(\$qb);\n\n"
+      . "    return \$this;\n"
+      . "  }";
+
+    $func[] = "  public function {$remover}(\${$one})\n"
+      . "  {\n"
+      . "    \$id = \${$one} instanceof {$item} ? \${$one}->get('{$foreign_id}') : \${$one};\n"
+      . "    \$m  = \$this->getManager();\n"
+      . "    \$qb = \$m->getQueryBuilder();\n"
+      . "    \$qb->delete('{$table}')\n"
+      . "      ->where(array('{$foreign_col}' => \$id, '{$my_col}' => \$this->get('{$my_id}')));\n"
+      . "    \$m->query(\$qb);\n\n"
+      . "    return \$this;\n"
+      . "  }";
+
+    $func[] = "  public function {$all_remover}()\n"
+      . "  {\n"
+      . "    \$m  = \$this->getManager();\n"
+      . "    \$qb = \$m->getQueryBuilder();\n"
+      . "    \$qb->delete('{$table}')\n"
+      . "      ->where(array('{$my_col}' => \$this->get('{$my_id}')));\n"
+      . "    \$m->query(\$qb);\n\n"
+      . "    return \$this;\n"
+      . "  }";
   }
 
   /** Генерация коллекции */
@@ -584,15 +785,15 @@ class Schema
     . "/**\n"
     . ' * Этот файл сгенерирован автоматически по схеме ' . $this->getName() . "\n"
     . " *\n"
-    . ' * @method \\' . $class . ' findOne($where = null) Найти и получить один объект' . "\n"
-    . ' * @method \\' . $class . ' make() Создать новый объект' . "\n"
-    . ' * @method \\' . $class . ' fetchObject(\PDOStatement $statement) Получение объекта из запроса' . "\n"
+    . ' * @method ' . $class . ' findOne($where = null) Найти и получить один объект' . "\n"
+    . ' * @method ' . $class . ' make() Создать новый объект' . "\n"
+    . ' * @method ' . $class . ' fetchObject(\PDOStatement $statement) Получение объекта из запроса' . "\n"
     . "*/\n"
     . "class " . $this->getName() . " extends " . $this->getCollectionBaseClass() . "\n"
     . "{\n"
     . "  protected function init()\n"
     . "  {\n"
-    . "    \$this->setItemClass('\\$class');\n"
+    . "    \$this->setItemClass('$class');\n"
     . "    \$this->setTable('" . $this->getTable() . "');\n"
     . "  }\n"
     . "}\n";
@@ -890,15 +1091,26 @@ class Schema
     return '    $tbl->removeColumn("' . $col . '");' . "\n";
   }
 
+  /** Генерация внешнего ключа */
   protected function makeFK($arr, $table_exists)
   {
     $m    = $this->getManager();
     $s    = $arr['schema'] instanceof Schema ? $arr['schema'] : $m->getSchema($arr['schema']);
     $f_id = $arr['foreign_id'] ?: $s->getPrimaryKey();
+    $opts = array();
 
-    $add = '    $tbl->addForeignKey("' . $arr['column'] . '", '
-      . '"' . $m->getPrefix() . $arr['table'] . '", "' . $f_id . '", '
-      . 'array("delete" => "' . $arr['on_delete'] . '", "update" => "' . $arr['on_update'] . '"));' . "\n";
+    if ($arr['on_delete']) {
+      $opts['delete'] = $arr['on_delete'];
+    }
+
+    if ($arr['on_update'] || $arr['on_delete']) {
+      $opts['update'] = $arr['on_update'] ?: $arr['on_delete'];
+    }
+
+    $add = '    $tbl->addForeignKey("' . $arr['column'] . '", "'
+      . $m->getPrefix() . $arr['table'] . '", "' . $f_id . '", '
+      . str_replace("\n", '', var_export($opts, true))
+      . ");\n";
 
     return $table_exists
       ? '    if (!$tbl->hasForeignKey(' . $arr['column'] . ')) {' . "\n  " . $add . "    }\n"

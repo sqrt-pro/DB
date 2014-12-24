@@ -36,15 +36,21 @@ class CollectionTest extends PHPUnit_Framework_TestCase
     $this->fillPages(10);
 
     $m = $this->getManager();
-    $c = new Collection($m);
-    $c->setTable('pages');
+    $c1 = new Collection($m);
+    $c1->setTable('pages');
 
-    $this->assertEquals(0, $c->count(), 'Коллекция пуста');
+    $this->assertTrue($c1->isEmpty(), 'Коллекция пуста');
 
-    $c->find('`id` > 5');
+    $c1->find('`id` > 5');
 
-    $this->assertEquals(5, $c->count(), '4 элемента после выборки');
-    $this->assertInstanceOf('ArrayIterator', $c->getIterator(), 'Iterator');
+    $this->assertEquals(5, $c1->count(), '5 элементов после выборки');
+    $this->assertInstanceOf('ArrayIterator', $c1->getIterator(), 'Iterator');
+    $this->assertTrue(is_array($c1->getIterator(true)), 'Массив');
+
+    $c2 = new Collection($m);
+    $c2->setItems($c1);
+    $this->assertEquals(5, $c2->count(), '5 элементов загружено');
+    $this->assertTrue($c2->isNotEmpty(), 'Коллекция содержит элементы');
   }
 
   function testFindOne()
