@@ -110,48 +110,41 @@ class Manager
   }
 
   /** @return Collection */
-  public function getCollection($name)
+  public function getCollection($name, $default = 'SQRT\DB\Collection')
   {
-    $a = $this->getCollectionInfo($name);
-
-    return new $a['class']($this, $a['table'], $a['item']);
-  }
-
-  /** Информация по коллекции - ассоциативный массив class, table, item */
-  public function getCollectionInfo($name, $default = 'SQRT\DB\Collection')
-  {
-    $lower = strtolower($name);
-
-    if (isset($this->collections[$lower])) {
-      return $this->collections[$lower];
+    if ($cl = $this->getCollectionClass($name)) {
+      return new $cl($this);
     }
 
     if (!$s = $this->getSchema($name)) {
       Exception::ThrowError(Exception::SCHEMA_NOT_EXISTS, $name);
     }
 
-    return array(
-      'class' => $default,
-      'table' => $s->getTable(),
-      'item'  => $s->getItemClass(),
-    );
+    /** @var $obj Collection */
+    $obj = new $default($this, $s->getTable(), $s->getItemClass());
+
+    return $obj;
+  }
+
+  /** Класс для коллекции */
+  public function getCollectionClass($name)
+  {
+    $name = strtolower($name);
+
+    return isset($this->collections[$name]) ? $this->collections[$name] : false;
   }
 
   /**
    * Класс для коллекции
    * @return static
    */
-  public function setCollectionInfo($name, $class, $table, $item)
+  public function setCollectionClass($name, $class)
   {
     if (!class_exists($class) || !in_array('SQRT\DB\Collection', class_parents($class))) {
       Exception::ThrowError(Exception::NOT_COLLECTION, $class);
     }
 
-    $this->collections[strtolower($name)] = array(
-      'class' => $class,
-      'table' => $table,
-      'item'  => $item,
-    );
+    $this->collections[strtolower($name)] = $class;
 
     return $this;
   }

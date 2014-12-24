@@ -87,16 +87,24 @@ class managerTest extends PHPUnit_Framework_TestCase
     $m = new \SQRT\DB\Manager();
     $s = new \SQRT\DB\Schema($m);
     $s->setName('Users');
+    $s->setTable('users');
+    $s->setItemClass('\User');
     $m->addSchema($s);
 
-    $this->assertInstanceOf('SQRT\DB\Collection', $m->getCollection('Users'), 'Класс коллекции по умолчанию');
+    $c = $m->getCollection('Users');
+    $this->assertInstanceOf('SQRT\DB\Collection', $c, 'Класс коллекции по умолчанию');
+    $this->assertEquals('users', $c->getTable(), 'Таблица из схемы');
+    $this->assertEquals('\User', $c->getItemClass(), 'Класс Item из Схемы');
 
-    $m->setCollectionInfo('users', 'TestCollection', 'users', 'Item');
+    $m->setCollectionClass('users', 'TestCollection');
 
-    $this->assertInstanceOf('TestCollection', $m->getCollection('Users'), 'Заданный класс для коллекции');
+    $c = $m->getCollection('Users');
+    $this->assertInstanceOf('TestCollection', $c, 'Заданный класс для коллекции');
+    $this->assertEquals('test', $c->getTable(), 'Таблица из init()');
+    $this->assertEquals('\TestItem', $c->getItemClass(), 'Класс Item из init()');
 
     try {
-      $m->setCollectionInfo('users', 'managerTest', 'users', 'item');
+      $m->setCollectionClass('users', 'managerTest');
 
       $this->fail('Ожидаемое исключение');
     } catch (Exception $e) {
@@ -115,5 +123,9 @@ class managerTest extends PHPUnit_Framework_TestCase
 
 class TestCollection extends \SQRT\DB\Collection
 {
-
+  protected function init()
+  {
+    $this->setTable('test');
+    $this->setItemClass('\TestItem');
+  }
 }

@@ -11,9 +11,17 @@ class Collection implements \IteratorAggregate, \Countable
   protected $table;
   protected $item_class = '\SQRT\DB\Item';
 
-  function __construct(Manager $manager)
+  function __construct(Manager $manager, $table = null, $item_class = null)
   {
     $this->manager = $manager;
+
+    if ($table) {
+      $this->setTable($table);
+    }
+
+    if ($item_class) {
+      $this->setItemClass($item_class);
+    }
 
     $this->init();
   }

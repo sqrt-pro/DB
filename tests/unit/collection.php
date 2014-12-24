@@ -63,11 +63,14 @@ class CollectionTest extends PHPUnit_Framework_TestCase
   function testMake()
   {
     $m = $this->getManager();
-    $c = new Collection($m);
-    $c->setTable('pages');
+
+    $c = new Collection($m, 'pages');
+    $this->assertInstanceOf('SQRT\DB\Item', $c->make(), 'Объект Item по-умолчанию');
+
+    $c = new Collection($m, 'pages', '\TestItem');
 
     $p = $c->make();
-    $this->assertInstanceOf('SQRT\DB\Item', $p, 'Объект Item');
+    $this->assertInstanceOf('\TestItem', $p, 'Объект \TestItem');
     $this->assertTrue($p->isNew(), 'Новый объект');
     $this->assertFalse($p->get('id'), 'ID не задан');
   }
