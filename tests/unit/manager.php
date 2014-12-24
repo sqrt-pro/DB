@@ -91,12 +91,12 @@ class managerTest extends PHPUnit_Framework_TestCase
 
     $this->assertInstanceOf('SQRT\DB\Collection', $m->getCollection('Users'), 'Класс коллекции по умолчанию');
 
-    $m->setCollectionClass('users', 'TestCollection');
+    $m->setCollectionInfo('users', 'TestCollection', 'users', 'Item');
 
     $this->assertInstanceOf('TestCollection', $m->getCollection('Users'), 'Заданный класс для коллекции');
 
     try {
-      $m->setCollectionClass('users', 'managerTest');
+      $m->setCollectionInfo('users', 'managerTest', 'users', 'item');
 
       $this->fail('Ожидаемое исключение');
     } catch (Exception $e) {

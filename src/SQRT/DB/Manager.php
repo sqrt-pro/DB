@@ -112,34 +112,46 @@ class Manager
   /** @return Collection */
   public function getCollection($name)
   {
+    $a = $this->getCollectionInfo($name);
+
+    return new $a['class']($this, $a['table'], $a['item']);
+  }
+
+  /** Информация по коллекции - ассоциативный массив class, table, item */
+  public function getCollectionInfo($name, $default = 'SQRT\DB\Collection')
+  {
+    $lower = strtolower($name);
+
+    if (isset($this->collections[$lower])) {
+      return $this->collections[$lower];
+    }
+
     if (!$s = $this->getSchema($name)) {
       Exception::ThrowError(Exception::SCHEMA_NOT_EXISTS, $name);
     }
 
-    $class = $this->getCollectionClass($name);
-
-    return new $class($this, $s->getTable(), $s->getItemClass());
-  }
-
-  /** Класс для коллекции */
-  public function getCollectionClass($name, $default = 'SQRT\DB\Collection')
-  {
-    $name = strtolower($name);
-
-    return isset($this->collections[$name]) ? $this->collections[$name] : $default;
+    return array(
+      'class' => $default,
+      'table' => $s->getTable(),
+      'item'  => $s->getItemClass(),
+    );
   }
 
   /**
    * Класс для коллекции
    * @return static
    */
-  public function setCollectionClass($name, $class)
+  public function setCollectionInfo($name, $class, $table, $item)
   {
     if (!class_exists($class) || !in_array('SQRT\DB\Collection', class_parents($class))) {
       Exception::ThrowError(Exception::NOT_COLLECTION, $class);
     }
 
-    $this->collections[strtolower($name)] = $class;
+    $this->collections[strtolower($name)] = array(
+      'class' => $class,
+      'table' => $table,
+      'item'  => $item,
+    );
 
     return $this;
   }
