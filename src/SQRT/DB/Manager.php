@@ -18,6 +18,7 @@ class Manager
   /** @var \PDO[] */
   protected $connections;
 
+  protected $collections;
   protected $queries;
 
   protected $debug = false;
@@ -115,7 +116,32 @@ class Manager
       Exception::ThrowError(Exception::SCHEMA_NOT_EXISTS, $name);
     }
 
-    return new Collection($this, $s->getTable(), $s->getItemClass());
+    $class = $this->getCollectionClass($name);
+
+    return new $class($this, $s->getTable(), $s->getItemClass());
+  }
+
+  /** Класс для коллекции */
+  public function getCollectionClass($name, $default = 'SQRT\DB\Collection')
+  {
+    $name = strtolower($name);
+
+    return isset($this->collections[$name]) ? $this->collections[$name] : $default;
+  }
+
+  /**
+   * Класс для коллекции
+   * @return static
+   */
+  public function setCollectionClass($name, $class)
+  {
+    if (!class_exists($class) || !in_array('SQRT\DB\Collection', class_parents($class))) {
+      Exception::ThrowError(Exception::NOT_COLLECTION, $class);
+    }
+
+    $this->collections[strtolower($name)] = $class;
+
+    return $this;
   }
 
   /** Префикс для всех таблиц */

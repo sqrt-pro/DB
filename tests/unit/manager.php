@@ -2,6 +2,8 @@
 
 require_once __DIR__ . '/../init.php';
 
+use SQRT\DB\Exception;
+
 class managerTest extends PHPUnit_Framework_TestCase
 {
   function testConnection()
@@ -10,7 +12,7 @@ class managerTest extends PHPUnit_Framework_TestCase
 
     try {
       $m->getConnection('not_exists');
-    } catch (\SQRT\DB\Exception $e) {
+    } catch (Exception $e) {
       $this->assertEquals(\SQRT\DB\Exception::CONNECTION_NOT_EXISTS, $e->getCode(), 'Код ошибки');
     }
 
@@ -30,8 +32,8 @@ class managerTest extends PHPUnit_Framework_TestCase
       $m->query('SELECT * FROM `not_exists`');
 
       $this->fail('Ожидаемое исключение');
-    } catch (\SQRT\DB\Exception $e) {
-      $this->assertEquals(\SQRT\DB\Exception::QUERY, $e->getCode());
+    } catch (Exception $e) {
+      $this->assertEquals(Exception::QUERY, $e->getCode());
     }
 
     $m->query('CREATE TABLE `names` (`id` int(10) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT, `name` varchar(250))');
@@ -80,6 +82,28 @@ class managerTest extends PHPUnit_Framework_TestCase
     $this->assertEquals($s, $m->getSchema('Users'), 'Схема добавлена и доступна по имени');
   }
 
+  function testGetCollection()
+  {
+    $m = new \SQRT\DB\Manager();
+    $s = new \SQRT\DB\Schema($m);
+    $s->setName('Users');
+    $m->addSchema($s);
+
+    $this->assertInstanceOf('SQRT\DB\Collection', $m->getCollection('Users'), 'Класс коллекции по умолчанию');
+
+    $m->setCollectionClass('users', 'TestCollection');
+
+    $this->assertInstanceOf('TestCollection', $m->getCollection('Users'), 'Заданный класс для коллекции');
+
+    try {
+      $m->setCollectionClass('users', 'managerTest');
+
+      $this->fail('Ожидаемое исключение');
+    } catch (Exception $e) {
+      $this->assertEquals(\SQRT\DB\Exception::NOT_COLLECTION, $e->getCode(), 'Код ошибки');
+    }
+  }
+
   protected function tearDown()
   {
     $m = new \SQRT\DB\Manager();
@@ -87,4 +111,9 @@ class managerTest extends PHPUnit_Framework_TestCase
     $m->query('DROP TABLE IF EXISTS `names`');
     $m->query('DROP TABLE IF EXISTS `test_names`');
   }
+}
+
+class TestCollection extends \SQRT\DB\Collection
+{
+
 }

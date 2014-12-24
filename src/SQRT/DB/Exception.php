@@ -11,6 +11,7 @@ class Exception extends \SQRT\Exception
   const ENUM_BAD_VALUE        = 50;
   const FILE_NOT_EXISTS       = 60;
   const PROCESSING_FILE       = 61;
+  const NOT_COLLECTION        = 70;
 
   protected static $errors_arr = array(
     self::CONNECTION_NOT_EXISTS => 'Подключение к БД "%s" не существует',
@@ -20,5 +21,6 @@ class Exception extends \SQRT\Exception
     self::ENUM_BAD_VALUE        => 'Поле "%s" не содержит варианта "%s"',
     self::FILE_NOT_EXISTS       => 'Файл "%s" не существует',
     self::PROCESSING_FILE       => 'Ошибка при обработке файла: %s',
+    self::NOT_COLLECTION        => 'Класс "%s" не является коллекцией',
   );
 } 
