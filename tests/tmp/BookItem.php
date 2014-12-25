@@ -107,12 +107,13 @@ abstract class Book extends \Base\Item
   public function addTag($tag)
   {
     $id = $tag instanceof \Tag ? $tag->get('id') : $tag;
-    $m  = $this->getManager();
-    $qb = $m->getQueryBuilder();
-    $qb->insert($this->tbl_tags)
+
+    $m = $this->getManager();
+    $q = $m->getQueryBuilder()
+      ->insert($this->tbl_tags)
       ->setEqual('tag_custom_id', $id)
       ->setEqual('book_id', $this->get('id'));
-    $m->query($qb);
+    $m->query($q);
 
     return $this;
   }
@@ -120,22 +121,23 @@ abstract class Book extends \Base\Item
   public function removeTag($tag)
   {
     $id = $tag instanceof \Tag ? $tag->get('id') : $tag;
-    $m  = $this->getManager();
-    $qb = $m->getQueryBuilder();
-    $qb->delete($this->tbl_tags)
+
+    $m = $this->getManager();
+    $q = $m->getQueryBuilder()
+      ->delete($this->tbl_tags)
       ->where(array('tag_custom_id' => $id, 'book_id' => $this->get('id')));
-    $m->query($qb);
+    $m->query($q);
 
     return $this;
   }
 
   public function removeAllTags()
   {
-    $m  = $this->getManager();
-    $qb = $m->getQueryBuilder();
-    $qb->delete($this->tbl_tags)
+    $m = $this->getManager();
+    $q = $m->getQueryBuilder()
+      ->delete($this->tbl_tags)
       ->where(array('book_id' => $this->get('id')));
-    $m->query($qb);
+    $m->query($q);
 
     return $this;
   }
