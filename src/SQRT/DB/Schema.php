@@ -257,7 +257,7 @@ class Schema
   public function addOneToOne($schema, $col = null, $foreign_id = null, $on_delete = null, $on_update = null)
   {
     $m = $this->getManager();
-    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
+    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
     $t = $s->getTable();
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
@@ -290,7 +290,7 @@ class Schema
   public function addManyToMany($schema, $join_table = null, $foreign_col = null, $my_col = null, $foreign_id = null, $my_id = null)
   {
     $m = $this->getManager();
-    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
+    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
     $t = $s->getTable();
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
@@ -328,7 +328,7 @@ class Schema
   public function addOneToMany($schema, $foreign_id = null, $col = null)
   {
     $m = $this->getManager();
-    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
+    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
     $t = $s->getTable();
 
     $this->relations[$t] = array(
