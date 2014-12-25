@@ -10,6 +10,8 @@ abstract class Tag extends \Base\Item
   /** @var \SQRT\DB\Collection|\Book[] */
   protected $books_arr;
 
+  protected $tbl_books = 'books_tags';
+
   protected function init()
   {
     $this->setPrimaryKey('id');
@@ -54,7 +56,7 @@ abstract class Tag extends \Base\Item
       $q = $m->getQueryBuilder()
         ->select('books t')
         ->columns('t.*')
-        ->join('books_tags j', 't.id = j.book_id')
+        ->join($this->tbl_books . ' j', 't.id = j.book_id')
         ->where(array('j.tag_custom_id' => $this->get('id')));
       
       $this->books_arr = $c->fetch($q)->getIterator(true);
@@ -68,7 +70,7 @@ abstract class Tag extends \Base\Item
     $id = $book instanceof \Book ? $book->get('id') : $book;
     $m  = $this->getManager();
     $qb = $m->getQueryBuilder();
-    $qb->insert('books_tags')
+    $qb->insert($this->tbl_books)
       ->setEqual('book_id', $id)
       ->setEqual('tag_custom_id', $this->get('id'));
     $m->query($qb);
@@ -81,7 +83,7 @@ abstract class Tag extends \Base\Item
     $id = $book instanceof \Book ? $book->get('id') : $book;
     $m  = $this->getManager();
     $qb = $m->getQueryBuilder();
-    $qb->delete('books_tags')
+    $qb->delete($this->tbl_books)
       ->where(array('book_id' => $id, 'tag_custom_id' => $this->get('id')));
     $m->query($qb);
 
@@ -92,7 +94,7 @@ abstract class Tag extends \Base\Item
   {
     $m  = $this->getManager();
     $qb = $m->getQueryBuilder();
-    $qb->delete('books_tags')
+    $qb->delete($this->tbl_books)
       ->where(array('tag_custom_id' => $this->get('id')));
     $m->query($qb);
 

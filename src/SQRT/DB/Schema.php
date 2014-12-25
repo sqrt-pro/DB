@@ -245,8 +245,12 @@ class Schema
     return $this->add($column, static::COL_IMAGE, array('null' => true), $size_arr);
   }
 
-  /** Связь один-к-одному */
-  public function addOneToOne($col, $schema, $foreign_id = null, $on_delete = null, $on_update = null)
+  /**
+   * Связь один-к-одному
+   * $col - столбец в таблице текущего объекта
+   * $foreign_id - столбец в таблице получаемого объекта
+   */
+  public function addOneToOne($schema, $col = null, $foreign_id = null, $on_delete = null, $on_update = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
@@ -255,6 +259,8 @@ class Schema
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
       Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
     }
+
+    $col = $col ?: StaticStringy::underscored($schema->getItemClass(false) . '_id');
 
     $this->addInt($col, NULL, true, 11);
     $this->addForeignKey($col, $s, $foreign_id, $on_delete, $on_update);
@@ -272,8 +278,8 @@ class Schema
   /**
    * Связь многие-к-многим через внешнюю таблицу
    * Если внешняя таблица $join_table не указана - название формируется из названий двух таблиц
-   * $foreign_col - столбец запрашиваемого объекта в объединяющей-таблице
-   * $my_col - столбец текущего объекта в объединяющей-таблице
+   * $foreign_col - столбец запрашиваемого объекта в объединяющей таблице
+   * $my_col - столбец текущего объекта в объединяющей таблице
    * $foreign_id - столбец Primary Key в таблице запрашиваемого объекта
    * $my_id - столбец Primary Key в таблице текущего объекта
    */
@@ -310,22 +316,22 @@ class Schema
     return $this;
   }
 
-  /** Связь многие-к-многим через внешнюю таблицу */
-  public function addOneToMany($schema, $foreign_id, $col = null)
+  /**
+   * Связь один-к-многим.
+   * $foreign_id - столбец в таблице запрашиваемого объекта
+   * $col - столбец в таблице текущего объекта
+   */
+  public function addOneToMany($schema, $foreign_id = null, $col = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
     $t = $s->getTable();
 
-    if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
-      Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
-    }
-
     $this->relations[$t] = array(
       'type'       => static::RELATION_ONE_TO_MANY,
       'column'     => $col ?: $this->getPrimaryKey(),
       'schema'     => $s,
-      'foreign_id' => $foreign_id,
+      'foreign_id' => $foreign_id ?: StaticStringy::underscored($this->getItemClass(false) . '_id'),
     );
 
     return $this;
@@ -725,6 +731,8 @@ class Schema
     $before[] = "  /** @var \\SQRT\\DB\\Collection|{$item}[] */\n"
       . "  protected \${$var};";
 
+    $before[] = "  protected \$tbl_{$name} = '{$table}';";
+
     $func[] = "  /** @return \\SQRT\\DB\\Collection|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
@@ -734,7 +742,7 @@ class Schema
       . "      \$q = \$m->getQueryBuilder()\n"
       . "        ->select('{$schema_tbl} t')\n"
       . "        ->columns('t.*')\n"
-      . "        ->join('{$table} j', 't.{$foreign_id} = j.{$foreign_col}')\n" //->join('books_tags j', 't.id = j.tag_custom_id')
+      . "        ->join(\$this->tbl_{$name} . ' j', 't.{$foreign_id} = j.{$foreign_col}')\n"
       . "        ->where(array('j.{$my_col}' => \$this->get('{$my_id}')));\n"
       . "      \n"
       . "      \$this->{$var} = \$c->fetch(\$q)->getIterator(true);\n"
@@ -747,7 +755,7 @@ class Schema
       . "    \$id = \${$one} instanceof {$item} ? \${$one}->get('{$foreign_id}') : \${$one};\n"
       . "    \$m  = \$this->getManager();\n"
       . "    \$qb = \$m->getQueryBuilder();\n"
-      . "    \$qb->insert('{$table}')\n"
+      . "    \$qb->insert(\$this->tbl_{$name})\n"
       . "      ->setEqual('{$foreign_col}', \$id)\n"
       . "      ->setEqual('{$my_col}', \$this->get('{$my_id}'));\n"
       . "    \$m->query(\$qb);\n\n"
@@ -759,7 +767,7 @@ class Schema
       . "    \$id = \${$one} instanceof {$item} ? \${$one}->get('{$foreign_id}') : \${$one};\n"
       . "    \$m  = \$this->getManager();\n"
       . "    \$qb = \$m->getQueryBuilder();\n"
-      . "    \$qb->delete('{$table}')\n"
+      . "    \$qb->delete(\$this->tbl_{$name})\n"
       . "      ->where(array('{$foreign_col}' => \$id, '{$my_col}' => \$this->get('{$my_id}')));\n"
       . "    \$m->query(\$qb);\n\n"
       . "    return \$this;\n"
@@ -769,7 +777,7 @@ class Schema
       . "  {\n"
       . "    \$m  = \$this->getManager();\n"
       . "    \$qb = \$m->getQueryBuilder();\n"
-      . "    \$qb->delete('{$table}')\n"
+      . "    \$qb->delete(\$this->tbl_{$name})\n"
       . "      ->where(array('{$my_col}' => \$this->get('{$my_id}')));\n"
       . "    \$m->query(\$qb);\n\n"
       . "    return \$this;\n"

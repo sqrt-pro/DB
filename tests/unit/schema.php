@@ -37,13 +37,13 @@ class schemaTest extends PHPUnit_Framework_TestCase
     $books_tags = new Schema($m);
     $books_tags
       ->setTable('books_tags')
-      ->addOneToOne('book_id', $books, null, Schema::FK_CASCADE)
-      ->addOneToOne('tag_custom_id', $tags);
+      ->addOneToOne($books, null, null, Schema::FK_CASCADE)
+      ->addOneToOne($tags, 'tag_custom_id');
 
-    $authors->addOneToMany($books, 'author_id');
+    $authors->addOneToMany($books);
 
     $books
-      ->addOneToOne('author_id', $authors, null, Schema::FK_RESTRICT, Schema::FK_CASCADE)
+      ->addOneToOne($authors, null, null, Schema::FK_RESTRICT, Schema::FK_CASCADE)
       ->addManyToMany($tags, $books_tags, 'tag_custom_id');
 
     $tags->addManyToMany($books, $books_tags, null, 'tag_custom_id');
