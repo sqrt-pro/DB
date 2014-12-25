@@ -260,7 +260,7 @@ class Schema
       Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
     }
 
-    $col = $col ?: StaticStringy::underscored($schema->getItemClass(false) . '_id');
+    $col = $col ?: StaticStringy::underscored($s->getItemClass(false) . '_id');
 
     $this->addInt($col, NULL, true, 11);
     $this->addForeignKey($col, $s, $foreign_id, $on_delete, $on_update);
@@ -298,7 +298,7 @@ class Schema
     }
 
     if (!$join_table) {
-      $arr = array($this->getName(), $schema->getName());
+      $arr = array($this->getName(), $s->getName());
       asort($arr);
       $join_table = StaticStringy::underscored(join(' ', $arr));
     }
