@@ -58,7 +58,7 @@ class Schema
   protected $foreign_keys;
   protected $actual_columns;
 
-  function __construct(Manager $manager, $table = null, $name = null)
+  function __construct(Manager $manager, $table = null, $name = null, $no_relations = false)
   {
     $this->setManager($manager);
 
@@ -71,6 +71,10 @@ class Schema
     }
 
     $this->init();
+
+    if (!$no_relations) {
+      $this->relations();
+    }
   }
 
   /** Заполнение таблицы данными по-умолчанию */
@@ -1182,6 +1186,12 @@ class Schema
 
   /** Настройка схемы */
   protected function init()
+  {
+
+  }
+
+  /** Настройка связей схемы, если нужно избежать рекурсии */
+  protected function relations()
   {
 
   }

@@ -17,6 +17,7 @@ class Manager
 
   /** @var \PDO[] */
   protected $connections;
+  protected $schema_namespace = '\\Schema';
 
   protected $collections;
   protected $queries;
@@ -99,9 +100,21 @@ class Manager
   }
 
   /** @return Schema */
-  public function getSchema($class)
+  public function getSchema($class, $no_relations = false)
   {
-    return isset($this->schemas[$class]) ? $this->schemas[$class] : false;
+    if ($no_relations) {
+      $schema = $this->makeSchema($class, $no_relations);
+    } else {
+      $schema = isset($this->schemas[$class]) ? $this->schemas[$class] : false;
+
+      if (empty($schema)) {
+        if ($schema = $this->makeSchema($class)) {
+          $this->addSchema($schema);
+        }
+      }
+    }
+
+    return $schema;
   }
 
   public function getAllSchemas()
@@ -149,6 +162,20 @@ class Manager
     return $this;
   }
 
+  /** Неймспейс, где будут искаться схемы */
+  public function getSchemaNamespace()
+  {
+    return $this->schema_namespace;
+  }
+
+  /** @return static */
+  public function setSchemaNamespace($schema_namespace)
+  {
+    $this->schema_namespace = $schema_namespace;
+
+    return $this;
+  }
+
   /** Префикс для всех таблиц */
   public function getPrefix()
   {
@@ -175,5 +202,13 @@ class Manager
     $this->debug = $debug;
 
     return $this;
+  }
+
+  /** @return Schema */
+  protected function makeSchema($class, $no_relations = false)
+  {
+    $nm = $this->getSchemaNamespace() . '\\' . $class;
+
+    return class_exists($nm) ? new $nm($this, null, null, $no_relations) : false;
   }
 }
