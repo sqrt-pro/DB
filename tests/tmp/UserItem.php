@@ -261,7 +261,7 @@ abstract class User extends \Base\Item
   /** @return \SQRT\Tag\Img */
   public function getAvatarImg($alt = null, $attr = null, $default = false)
   {
-    $f = $this->getPhotoThumb($default);
+    $f = $this->getAvatar($default);
 
     return $f ? new \SQRT\Tag\Img($f, $this->getAvatarWidth(), $this->getAvatarHeight(), $alt, $attr) : false;
   }
@@ -425,7 +425,7 @@ abstract class User extends \Base\Item
   /** @return \SQRT\Tag\Img */
   public function getPhotoBigImg($alt = null, $attr = null, $default = false)
   {
-    $f = $this->getPhotoThumb($default);
+    $f = $this->getPhotoBig($default);
 
     return $f ? new \SQRT\Tag\Img($f, $this->getPhotoBigWidth(), $this->getPhotoBigHeight(), $alt, $attr) : false;
   }

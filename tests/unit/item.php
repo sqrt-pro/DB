@@ -283,17 +283,23 @@ class ItemTest extends PHPUnit_Framework_TestCase
   {
     $this->temp = realpath(__DIR__ . '/../tmp');
 
+    $m = $this->getManager();
     $q = 'CREATE TABLE `test_pages` ('
       . '`id` int(10) unsigned NOT NULL PRIMARY KEY AUTO_INCREMENT,'
       . '`name` VARCHAR(250),'
       . '`created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
       . ')';
-    $this->getManager()->query($q);
+
+    $m->query($q);
+    $m->query('DROP TABLE IF EXISTS test_books_tags');
+    $m->query('DROP TABLE IF EXISTS test_books');
+    $m->query('DROP TABLE IF EXISTS test_authors');
+    $m->query('DROP TABLE IF EXISTS test_tags');
   }
 
   protected function tearDown()
   {
-    $this->getManager()
-      ->query('DROP TABLE IF EXISTS test_pages');
+    $m = $this->getManager();
+    $m->query('DROP TABLE IF EXISTS test_pages');
   }
 }

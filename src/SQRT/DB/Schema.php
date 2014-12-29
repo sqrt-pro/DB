@@ -966,7 +966,7 @@ class Schema
       $func[] = "  /** @return \\SQRT\\Tag\\Img */\n"
         . "  public function {$getter}Img(\$alt = null, \$attr = null, \$default = false)\n"
         . "  {\n"
-        . "    \$f = \$this->getPhotoThumb(\$default);\n\n"
+        . "    \$f = \$this->{$getter}(\$default);\n\n"
         . "    return \$f ? new \\SQRT\\Tag\\Img(\$f, \$this->{$getter}Width(), \$this->{$getter}Height(), \$alt, \$attr) : false;\n"
         . "  }";
     }
