@@ -191,7 +191,7 @@ class Schema
   public function addForeignKey($col, $schema, $foreign_id = null, $on_delete = null, $on_update = null)
   {
     $m = $this->getManager();
-    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema);
+    $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
       // Exception

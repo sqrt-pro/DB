@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "72d3c01c956ba489447d937cded231ae",
+    "hash": "8cf1116f0c78d9d1ffaeac41ebebeead",
     "packages": [
         {
             "name": "danielstjules/stringy",
@@ -64,20 +64,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/robmorgan/phinx.git",
-                "reference": "9096024ab7d6985ae541eb09aaf480e8f95a342c"
+                "reference": "357210707c000f50edea802d84b74724ad122478"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/robmorgan/phinx/zipball/9096024ab7d6985ae541eb09aaf480e8f95a342c",
-                "reference": "9096024ab7d6985ae541eb09aaf480e8f95a342c",
+                "url": "https://api.github.com/repos/robmorgan/phinx/zipball/357210707c000f50edea802d84b74724ad122478",
+                "reference": "357210707c000f50edea802d84b74724ad122478",
                 "shasum": ""
             },
             "require": {
                 "php": ">=5.3.2",
-                "symfony/class-loader": "~2.5.0",
-                "symfony/config": "~2.5.0",
-                "symfony/console": "~2.5.0",
-                "symfony/yaml": "~2.5.0"
+                "symfony/class-loader": "~2.6.0",
+                "symfony/config": "~2.6.0",
+                "symfony/console": "~2.6.0",
+                "symfony/yaml": "~2.6.0"
             },
             "require-dev": {
                 "phpunit/phpunit": "3.7.*",
@@ -113,7 +113,7 @@
                 "migrations",
                 "phinx"
             ],
-            "time": "2014-12-14 13:06:08"
+            "time": "2014-12-23 06:06:14"
         },
         {
             "name": "sqrt-pro/exception",
@@ -223,12 +223,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sqrt-pro/QueryBuilder.git",
-                "reference": "cf433d32cc6c04821827f49dfd4eb3be790d9509"
+                "reference": "8e1f1738e1268d28352110163eef680ae58f16b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sqrt-pro/QueryBuilder/zipball/cf433d32cc6c04821827f49dfd4eb3be790d9509",
-                "reference": "cf433d32cc6c04821827f49dfd4eb3be790d9509",
+                "url": "https://api.github.com/repos/sqrt-pro/QueryBuilder/zipball/8e1f1738e1268d28352110163eef680ae58f16b8",
+                "reference": "8e1f1738e1268d28352110163eef680ae58f16b8",
                 "shasum": ""
             },
             "require": {
@@ -246,7 +246,7 @@
             ],
             "description": "SQL Query Builder is a part of SQRT Framework",
             "homepage": "http://fw.sqrt.pro",
-            "time": "2014-12-18 15:38:35"
+            "time": "2014-12-26 17:17:32"
         },
         {
             "name": "sqrt-pro/tag",
@@ -254,12 +254,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sqrt-pro/Tag.git",
-                "reference": "b21168bdb83bf8f4b9303a1f4c0c068bff6f2910"
+                "reference": "e8e026075563bae12ab6a68a1079225b69e20aaa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sqrt-pro/Tag/zipball/b21168bdb83bf8f4b9303a1f4c0c068bff6f2910",
-                "reference": "b21168bdb83bf8f4b9303a1f4c0c068bff6f2910",
+                "url": "https://api.github.com/repos/sqrt-pro/Tag/zipball/e8e026075563bae12ab6a68a1079225b69e20aaa",
+                "reference": "e8e026075563bae12ab6a68a1079225b69e20aaa",
                 "shasum": ""
             },
             "require": {
@@ -277,7 +277,7 @@
             ],
             "description": "SQRT.pro Tag is part of SQRT Framework",
             "homepage": "http://fw.sqrt.pro",
-            "time": "2014-12-07 15:23:05"
+            "time": "2014-12-26 13:09:32"
         },
         {
             "name": "sqrt-pro/url",
@@ -315,17 +315,17 @@
         },
         {
             "name": "symfony/class-loader",
-            "version": "2.5.x-dev",
+            "version": "2.6.x-dev",
             "target-dir": "Symfony/Component/ClassLoader",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/ClassLoader.git",
-                "reference": "e855bec4c194d9367b9057c18085f1ee18ab5d48"
+                "reference": "b855c55f2fe753fc93cec26f74a4678dda775ab1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/ClassLoader/zipball/e855bec4c194d9367b9057c18085f1ee18ab5d48",
-                "reference": "e855bec4c194d9367b9057c18085f1ee18ab5d48",
+                "url": "https://api.github.com/repos/symfony/ClassLoader/zipball/b855c55f2fe753fc93cec26f74a4678dda775ab1",
+                "reference": "b855c55f2fe753fc93cec26f74a4678dda775ab1",
                 "shasum": ""
             },
             "require": {
@@ -337,7 +337,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.5-dev"
+                    "dev-master": "2.6-dev"
                 }
             },
             "autoload": {
@@ -361,21 +361,21 @@
             ],
             "description": "Symfony ClassLoader Component",
             "homepage": "http://symfony.com",
-            "time": "2014-12-15 18:38:14"
+            "time": "2014-12-22 16:44:09"
         },
         {
             "name": "symfony/config",
-            "version": "2.5.x-dev",
+            "version": "2.6.x-dev",
             "target-dir": "Symfony/Component/Config",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Config.git",
-                "reference": "b349eea3271d2d94cf2faa158c10a8faa2de11eb"
+                "reference": "48467e09968044a716e03f0543bdcebef577dd8c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Config/zipball/b349eea3271d2d94cf2faa158c10a8faa2de11eb",
-                "reference": "b349eea3271d2d94cf2faa158c10a8faa2de11eb",
+                "url": "https://api.github.com/repos/symfony/Config/zipball/48467e09968044a716e03f0543bdcebef577dd8c",
+                "reference": "48467e09968044a716e03f0543bdcebef577dd8c",
                 "shasum": ""
             },
             "require": {
@@ -385,7 +385,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.5-dev"
+                    "dev-master": "2.6-dev"
                 }
             },
             "autoload": {
@@ -409,21 +409,21 @@
             ],
             "description": "Symfony Config Component",
             "homepage": "http://symfony.com",
-            "time": "2014-12-11 19:53:06"
+            "time": "2014-12-23 17:36:09"
         },
         {
             "name": "symfony/console",
-            "version": "2.5.x-dev",
+            "version": "2.6.x-dev",
             "target-dir": "Symfony/Component/Console",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Console.git",
-                "reference": "fa55dfef7dc669e037d090296f55fac6a3cc6993"
+                "reference": "8449ebc10c95f4f7e51ebf59232773cf4bf101f5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Console/zipball/fa55dfef7dc669e037d090296f55fac6a3cc6993",
-                "reference": "fa55dfef7dc669e037d090296f55fac6a3cc6993",
+                "url": "https://api.github.com/repos/symfony/Console/zipball/8449ebc10c95f4f7e51ebf59232773cf4bf101f5",
+                "reference": "8449ebc10c95f4f7e51ebf59232773cf4bf101f5",
                 "shasum": ""
             },
             "require": {
@@ -431,16 +431,18 @@
             },
             "require-dev": {
                 "psr/log": "~1.0",
-                "symfony/event-dispatcher": "~2.1"
+                "symfony/event-dispatcher": "~2.1",
+                "symfony/process": "~2.1"
             },
             "suggest": {
                 "psr/log": "For using the console logger",
-                "symfony/event-dispatcher": ""
+                "symfony/event-dispatcher": "",
+                "symfony/process": ""
             },
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.5-dev"
+                    "dev-master": "2.6-dev"
                 }
             },
             "autoload": {
@@ -464,7 +466,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "http://symfony.com",
-            "time": "2014-12-11 20:21:50"
+            "time": "2014-12-24 10:55:18"
         },
         {
             "name": "symfony/filesystem",
@@ -473,12 +475,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Filesystem.git",
-                "reference": "1ff6caf45e7c5aac036b1536a914afbf4b8c6066"
+                "reference": "b394b18ed68d0ec3c87ae8f5f4d80c29d80b3dd8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Filesystem/zipball/1ff6caf45e7c5aac036b1536a914afbf4b8c6066",
-                "reference": "1ff6caf45e7c5aac036b1536a914afbf4b8c6066",
+                "url": "https://api.github.com/repos/symfony/Filesystem/zipball/b394b18ed68d0ec3c87ae8f5f4d80c29d80b3dd8",
+                "reference": "b394b18ed68d0ec3c87ae8f5f4d80c29d80b3dd8",
                 "shasum": ""
             },
             "require": {
@@ -511,21 +513,21 @@
             ],
             "description": "Symfony Filesystem Component",
             "homepage": "http://symfony.com",
-            "time": "2014-12-12 16:23:01"
+            "time": "2014-12-25 23:30:25"
         },
         {
             "name": "symfony/yaml",
-            "version": "2.5.x-dev",
+            "version": "2.6.x-dev",
             "target-dir": "Symfony/Component/Yaml",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Yaml.git",
-                "reference": "5ef4eb898caa9fe0862bba7b5f22e45bb0efcc7c"
+                "reference": "676e87d346467eb6231c9bbec504168eb883aef9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Yaml/zipball/5ef4eb898caa9fe0862bba7b5f22e45bb0efcc7c",
-                "reference": "5ef4eb898caa9fe0862bba7b5f22e45bb0efcc7c",
+                "url": "https://api.github.com/repos/symfony/Yaml/zipball/676e87d346467eb6231c9bbec504168eb883aef9",
+                "reference": "676e87d346467eb6231c9bbec504168eb883aef9",
                 "shasum": ""
             },
             "require": {
@@ -534,7 +536,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.5-dev"
+                    "dev-master": "2.6-dev"
                 }
             },
             "autoload": {
@@ -558,7 +560,7 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "http://symfony.com",
-            "time": "2014-12-04 08:55:19"
+            "time": "2014-12-22 16:44:09"
         },
         {
             "name": "true/punycode",
@@ -616,8 +618,8 @@
         "sqrt-pro/query-builder": 20,
         "sqrt-pro/helpers": 20,
         "sqrt-pro/image": 20,
-        "danielstjules/stringy": 20,
-        "sqrt-pro/url": 20
+        "sqrt-pro/url": 20,
+        "danielstjules/stringy": 20
     },
     "prefer-stable": false,
     "platform": {
