@@ -224,6 +224,9 @@ class schemaTest extends PHPUnit_Framework_TestCase
     $m = $this->getManager('test_');
 
     $s = new Schema($m);
+
+    $this->assertEquals('Schema', $s->getName(), 'По-умолчанию имя берется из класса');
+
     $s->setName('Users');
 
     $this->assertEquals('users', $s->getTable(), 'Таблица сгенерировалась из названия');

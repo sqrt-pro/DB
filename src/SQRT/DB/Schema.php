@@ -66,7 +66,9 @@ class Schema
       $this->setTable($table);
     }
 
-    $this->setName($name ?: ($table ? StaticStringy::upperCamelize($table): get_called_class()));
+    if ($name) {
+      $this->setName($name);
+    }
 
     $this->init();
 
@@ -415,7 +417,7 @@ class Schema
   /** Имя таблицы */
   public function getTable()
   {
-    return $this->table ?: StaticStringy::underscored($this->name);
+    return $this->table ?: StaticStringy::underscored($this->getName());
   }
 
   /** Имя таблицы */
@@ -429,7 +431,17 @@ class Schema
   /** Название схемы */
   public function getName()
   {
-    return $this->name ?: StaticStringy::upperCamelize($this->table);
+    if ($this->name) {
+      return $this->name;
+    }
+
+    if ($this->table) {
+      return StaticStringy::upperCamelize($this->table);
+    }
+
+    $arr = explode('\\', get_called_class());
+    
+    return array_pop($arr);
   }
 
   /** Название схемы */
