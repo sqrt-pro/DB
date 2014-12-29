@@ -194,7 +194,7 @@ class Schema
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
-      // Exception
+      Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
     }
 
     $this->foreign_keys[$col] = array(
