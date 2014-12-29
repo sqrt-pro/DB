@@ -14,9 +14,8 @@ class schemaTest extends PHPUnit_Framework_TestCase
     $m = $this->getManager('test_');
 
     // Создание схем
-    $authors = new Schema($m);
+    $authors = new Schema($m, 'authors');
     $authors
-      ->setTable('authors')
       ->addId()
       ->addChar('name');
 
@@ -28,7 +27,7 @@ class schemaTest extends PHPUnit_Framework_TestCase
 
     $tags = new Schema($m);
     $tags
-      ->setTable('tags')
+      ->setName('Tags')
       ->addId()
       ->addChar('name');
 

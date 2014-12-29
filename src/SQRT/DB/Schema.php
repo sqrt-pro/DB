@@ -66,9 +66,7 @@ class Schema
       $this->setTable($table);
     }
 
-    if ($name) {
-      $this->setName($name);
-    }
+    $this->setName($name ?: ($table ? StaticStringy::upperCamelize($table): get_called_class()));
 
     $this->init();
 
