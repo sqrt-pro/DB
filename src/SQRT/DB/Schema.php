@@ -253,8 +253,10 @@ class Schema
    * Связь один-к-одному
    * $col - столбец в таблице текущего объекта
    * $foreign_id - столбец в таблице получаемого объекта
+   * $name - название связи для генерации методов
+   * $one - название одного элемента
    */
-  public function addOneToOne($schema, $col = null, $foreign_id = null, $on_delete = null, $on_update = null)
+  public function addOneToOne($schema, $col = null, $foreign_id = null, $on_delete = null, $on_update = null, $name = null, $one = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
@@ -266,7 +268,7 @@ class Schema
 
     $col = $col ?: StaticStringy::underscored($s->getItemClass(false) . '_id');
 
-    $this->addInt($col, NULL, true, 11);
+    $this->addInt($col, null, true, 11);
     $this->addForeignKey($col, $s, $foreign_id, $on_delete, $on_update);
 
     $this->relations[$t] = array(
@@ -274,6 +276,8 @@ class Schema
       'column'     => $col,
       'schema'     => $s,
       'foreign_id' => $foreign_id,
+      'name'       => $name ?: $s->getName(),
+      'one'        => $one ?: $s->getItemClass(false),
     );
 
     return $this;
@@ -286,8 +290,10 @@ class Schema
    * $my_col - столбец текущего объекта в объединяющей таблице
    * $foreign_id - столбец Primary Key в таблице запрашиваемого объекта
    * $my_id - столбец Primary Key в таблице текущего объекта
+   * $name - название связи для генерации методов
+   * $one - название одного элемента
    */
-  public function addManyToMany($schema, $join_table = null, $foreign_col = null, $my_col = null, $foreign_id = null, $my_id = null)
+  public function addManyToMany($schema, $join_table = null, $foreign_col = null, $my_col = null, $foreign_id = null, $my_id = null, $name = null, $one = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
@@ -315,6 +321,8 @@ class Schema
       'foreign_col' => $foreign_col ?: StaticStringy::underscored($s->getItemClass(false) . '_id'),
       'my_id'       => $my_id ?: $this->getPrimaryKey(),
       'table'       => $join_table,
+      'name'        => $name ?: $s->getName(),
+      'one'         => $one ?: $s->getItemClass(false),
     );
 
     return $this;
@@ -324,8 +332,10 @@ class Schema
    * Связь один-к-многим.
    * $foreign_id - столбец в таблице запрашиваемого объекта
    * $col - столбец в таблице текущего объекта
+   * $name - название связи для генерации методов
+   * $one - название одного элемента
    */
-  public function addOneToMany($schema, $foreign_id = null, $col = null)
+  public function addOneToMany($schema, $foreign_id = null, $col = null, $name = null, $one = null)
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
@@ -336,6 +346,8 @@ class Schema
       'column'     => $col ?: $this->getPrimaryKey(),
       'schema'     => $s,
       'foreign_id' => $foreign_id ?: StaticStringy::underscored($this->getItemClass(false) . '_id'),
+      'name'       => $name ?: $s->getName(),
+      'one'        => $one ?: $s->getItemClass(false),
     );
 
     return $this;
@@ -440,7 +452,7 @@ class Schema
     }
 
     $arr = explode('\\', get_called_class());
-    
+
     return array_pop($arr);
   }
 
@@ -654,15 +666,16 @@ class Schema
     $schema = $relation['schema'];
     $col    = $relation['column'];
     $fk     = $relation['foreign_id'];
+    $one    = $relation['one'];
 
-    $schema_name = $schema->getName();
-    $item        = $schema->getItemClass();
-    $name        = StaticStringy::underscored($schema->getItemClass(false));
-    $getter      = StaticStringy::camelize('get ' . $name);
-    $setter      = StaticStringy::camelize('set ' . $name);
+    $collection = $schema->getName();
+    $item       = $schema->getItemClass();
+    $var        = StaticStringy::underscored($one);
+    $getter     = StaticStringy::camelize('get ' . $one);
+    $setter     = StaticStringy::camelize('set ' . $one);
 
     $before[] = "  /** @var {$item} */\n"
-      . "  protected \${$name};";
+      . "  protected \${$var};";
 
     $func[] = "  /** @return {$item} */\n"
       . "  public function {$getter}(\$reload = false)\n"
@@ -670,17 +683,17 @@ class Schema
       . "    if (!\$id = \$this->get('{$col}')) {\n"
       . "      return false;\n"
       . "    }\n\n"
-      . "    if (is_null(\$this->{$name}) || \$reload) {\n"
-      . "      \$c = \$this->getManager()->getCollection('{$schema_name}');\n\n"
-      . "      \$this->{$name} = \$c->findOne(array('{$fk}' => \$id));\n"
+      . "    if (is_null(\$this->{$var}) || \$reload) {\n"
+      . "      \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
+      . "      \$this->{$var} = \$c->findOne(array('{$fk}' => \$id));\n"
       . "    }\n\n"
-      . "    return \$this->{$name};\n"
+      . "    return \$this->{$var};\n"
       . "  }";
     $func[] = "  /** @return static */\n"
-      . "  public function {$setter}({$item} \${$name})\n"
+      . "  public function {$setter}({$item} \${$var})\n"
       . "  {\n"
-      . "    \$this->{$name} = \${$name};\n\n"
-      . "    return \$this->set('{$col}', \${$name}->get('{$fk}'));\n"
+      . "    \$this->{$var} = \${$var};\n\n"
+      . "    return \$this->set('{$col}', \${$var}->get('{$fk}'));\n"
       . "  }";
   }
 
@@ -690,31 +703,33 @@ class Schema
     $schema = $relation['schema'];
     $col    = $relation['column'];
     $fk     = $relation['foreign_id'];
+    $name   = $relation['name'];
+    $one    = $relation['one'];
 
-    $schema_name = $schema->getName();
-    $item        = $schema->getItemClass();
-    $name        = StaticStringy::underscored($schema_name);
-    $var         = $name . '_arr';
-    $getter      = StaticStringy::camelize('get ' . $name);
-    $setter      = StaticStringy::camelize('set ' . $name);
+    $collection = $schema->getName();
+    $item       = $schema->getItemClass();
+    $var        = StaticStringy::underscored($name);
+    $var_arr    = $var . '_arr';
+    $getter     = StaticStringy::camelize('get ' . $name);
+    $setter     = StaticStringy::camelize('set ' . $name);
 
     $before[] = "  /** @var \\SQRT\\DB\\Collection|{$item}[] */\n"
-      . "  protected \${$var};";
+      . "  protected \${$var_arr};";
 
     $func[] = "  /** @return \\SQRT\\DB\\Collection|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
-      . "    \$c = \$this->getManager()->getCollection('{$schema_name}');\n\n"
-      . "    if (is_null(\$this->{$var}) || \$reload) {\n"
-      . "      \$this->{$var} = \$c->find(array('{$fk}' => \$this->get('{$col}')))->getIterator(true);\n"
+      . "    \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
+      . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
+      . "      \$this->{$var_arr} = \$c->find(array('{$fk}' => \$this->get('{$col}')))->getIterator(true);\n"
       . "    }\n\n"
-      . "    return \$c->setItems(\$this->{$var});\n"
+      . "    return \$c->setItems(\$this->{$var_arr});\n"
       . "  }";
 
     $func[] = "  /** @return static */\n"
-      . "  public function {$setter}(\${$var} = null)\n"
+      . "  public function {$setter}(\${$var_arr} = null)\n"
       . "  {\n"
-      . "    \$this->{$var} = \${$var};\n\n"
+      . "    \$this->{$var_arr} = \${$var_arr};\n\n"
       . "    return \$this;\n"
       . "  }";
   }
@@ -726,62 +741,64 @@ class Schema
     $my_col = $relation['column'];
     $my_id  = $relation['my_id'];
     $table  = $relation['table'];
+    $name   = $relation['name'];
+    $one    = $relation['one'];
 
     $foreign_id  = $relation['foreign_id'];
     $foreign_col = $relation['foreign_col'];
 
-    $schema_name = $schema->getName();
     $schema_tbl  = $schema->getTable();
+    $collection  = $schema->getName();
     $item        = $schema->getItemClass();
-    $name        = StaticStringy::underscored($schema_name);
-    $one         = StaticStringy::underscored($schema->getItemClass(false));
-    $var         = $name . '_arr';
-    $getter      = StaticStringy::camelize('get ' . $name);
-    $setter      = StaticStringy::camelize('set ' . $name);
-    $adder       = StaticStringy::camelize('add ' . $one);
-    $remover     = StaticStringy::camelize('remove ' . $one);
-    $all_remover = StaticStringy::camelize('remove all ' . $schema_name);
+    $var_name    = StaticStringy::underscored($name);
+    $var_one     = StaticStringy::underscored($one);
+    $var_arr     = $var_name . '_arr';
+    $getter      = StaticStringy::camelize('get ' . $var_name);
+    $setter      = StaticStringy::camelize('set ' . $var_name);
+    $adder       = StaticStringy::camelize('add ' . $var_one);
+    $remover     = StaticStringy::camelize('remove ' . $var_one);
+    $all_remover = StaticStringy::camelize('remove all ' . $name);
 
     $before[] = "  /** @var \\SQRT\\DB\\Collection|{$item}[] */\n"
-      . "  protected \${$var};";
+      . "  protected \${$var_arr};";
 
-    $before[] = "  protected \$tbl_{$name} = '{$table}';";
+    $before[] = "  protected \$tbl_{$var_name} = '{$table}';";
 
     $func[] = "  /** @return \\SQRT\\DB\\Collection|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
       . "    \$m = \$this->getManager();\n"
-      . "    \$c = \$m->getCollection('{$schema_name}');\n\n"
-      . "    if (is_null(\$this->{$var}) || \$reload) {\n"
+      . "    \$c = \$m->getCollection('{$collection}');\n\n"
+      . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
       . "      \$q = \$m->getQueryBuilder()\n"
       . "        ->select('{$schema_tbl} t')\n"
       . "        ->columns('t.*')\n"
-      . "        ->join(\$this->tbl_{$name} . ' j', 't.{$foreign_id} = j.{$foreign_col}')\n"
+      . "        ->join(\$this->tbl_{$var_name} . ' j', 't.{$foreign_id} = j.{$foreign_col}')\n"
       . "        ->where(array('j.{$my_col}' => \$this->get('{$my_id}')));\n"
       . "      \n"
-      . "      \$this->{$var} = \$c->fetch(\$q)->getIterator(true);\n"
+      . "      \$this->{$var_arr} = \$c->fetch(\$q)->getIterator(true);\n"
       . "    }\n\n"
-      . "    return \$c->setItems(\$this->{$var});\n"
+      . "    return \$c->setItems(\$this->{$var_arr});\n"
       . "  }";
 
-    $func[] = "  public function {$adder}(\${$one})\n"
+    $func[] = "  public function {$adder}(\${$var_one})\n"
       . "  {\n"
-      . "    \$id = \${$one} instanceof {$item} ? \${$one}->get('{$foreign_id}') : \${$one};\n\n"
+      . "    \$id = \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n\n"
       . "    \$m = \$this->getManager();\n"
       . "    \$q = \$m->getQueryBuilder()\n"
-      . "      ->insert(\$this->tbl_{$name})\n"
+      . "      ->insert(\$this->tbl_{$var_name})\n"
       . "      ->setEqual('{$foreign_col}', \$id)\n"
       . "      ->setEqual('{$my_col}', \$this->get('{$my_id}'));\n"
       . "    \$m->query(\$q);\n\n"
       . "    return \$this;\n"
       . "  }";
 
-    $func[] = "  public function {$remover}(\${$one})\n"
+    $func[] = "  public function {$remover}(\${$var_one})\n"
       . "  {\n"
-      . "    \$id = \${$one} instanceof {$item} ? \${$one}->get('{$foreign_id}') : \${$one};\n\n"
+      . "    \$id = \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n\n"
       . "    \$m = \$this->getManager();\n"
       . "    \$q = \$m->getQueryBuilder()\n"
-      . "      ->delete(\$this->tbl_{$name})\n"
+      . "      ->delete(\$this->tbl_{$var_name})\n"
       . "      ->where(array('{$foreign_col}' => \$id, '{$my_col}' => \$this->get('{$my_id}')));\n"
       . "    \$m->query(\$q);\n\n"
       . "    return \$this;\n"
@@ -791,7 +808,7 @@ class Schema
       . "  {\n"
       . "    \$m = \$this->getManager();\n"
       . "    \$q = \$m->getQueryBuilder()\n"
-      . "      ->delete(\$this->tbl_{$name})\n"
+      . "      ->delete(\$this->tbl_{$var_name})\n"
       . "      ->where(array('{$my_col}' => \$this->get('{$my_id}')));\n"
       . "    \$m->query(\$q);\n\n"
       . "    return \$this;\n"
@@ -802,16 +819,18 @@ class Schema
   public function makeCollection($namespace = 'Collection')
   {
     $class = $this->getItemClass();
+    $name = $this->getName();
 
     return "<?php\n\nnamespace $namespace;\n\n"
     . "/**\n"
-    . ' * Этот файл сгенерирован автоматически по схеме ' . $this->getName() . "\n"
+    . ' * Этот файл сгенерирован автоматически по схеме ' . $name . "\n"
     . " *\n"
+    . ' * @method ' . $class . '[]|' . $name . ' find($where = null, $orderby = null, $onpage = null, $page = null) Загрузить в коллекцию объекты' . "\n"
     . ' * @method ' . $class . ' findOne($where = null) Найти и получить один объект' . "\n"
     . ' * @method ' . $class . ' make() Создать новый объект' . "\n"
     . ' * @method ' . $class . ' fetchObject(\PDOStatement $statement) Получение объекта из запроса' . "\n"
     . "*/\n"
-    . "class " . $this->getName() . " extends " . $this->getCollectionBaseClass() . "\n"
+    . "class " . $name . " extends " . $this->getCollectionBaseClass() . "\n"
     . "{\n"
     . "  protected function init()\n"
     . "  {\n"

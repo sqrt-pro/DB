@@ -8,12 +8,12 @@ use SQRT\DB\Exception;
 abstract class Book extends \Base\Item
 {
   /** @var \Author */
-  protected $author;
+  protected $my_author;
 
   /** @var \SQRT\DB\Collection|\Tag[] */
-  protected $tags_arr;
+  protected $my_tags_arr;
 
-  protected $tbl_tags = 'books_tags';
+  protected $tbl_my_tags = 'books_tags';
 
   protected function init()
   {
@@ -62,55 +62,55 @@ abstract class Book extends \Base\Item
   }
 
   /** @return \Author */
-  public function getAuthor($reload = false)
+  public function getMyAuthor($reload = false)
   {
     if (!$id = $this->get('author_id')) {
       return false;
     }
 
-    if (is_null($this->author) || $reload) {
+    if (is_null($this->my_author) || $reload) {
       $c = $this->getManager()->getCollection('Authors');
 
-      $this->author = $c->findOne(array('id' => $id));
+      $this->my_author = $c->findOne(array('id' => $id));
     }
 
-    return $this->author;
+    return $this->my_author;
   }
 
   /** @return static */
-  public function setAuthor(\Author $author)
+  public function setMyAuthor(\Author $my_author)
   {
-    $this->author = $author;
+    $this->my_author = $my_author;
 
-    return $this->set('author_id', $author->get('id'));
+    return $this->set('author_id', $my_author->get('id'));
   }
 
   /** @return \SQRT\DB\Collection|\Tag[] */
-  public function getTags($reload = false)
+  public function getMyTags($reload = false)
   {
     $m = $this->getManager();
     $c = $m->getCollection('Tags');
 
-    if (is_null($this->tags_arr) || $reload) {
+    if (is_null($this->my_tags_arr) || $reload) {
       $q = $m->getQueryBuilder()
         ->select('tags t')
         ->columns('t.*')
-        ->join($this->tbl_tags . ' j', 't.id = j.tag_custom_id')
+        ->join($this->tbl_my_tags . ' j', 't.id = j.tag_custom_id')
         ->where(array('j.book_id' => $this->get('id')));
       
-      $this->tags_arr = $c->fetch($q)->getIterator(true);
+      $this->my_tags_arr = $c->fetch($q)->getIterator(true);
     }
 
-    return $c->setItems($this->tags_arr);
+    return $c->setItems($this->my_tags_arr);
   }
 
-  public function addTag($tag)
+  public function addMyTag($my_tag)
   {
-    $id = $tag instanceof \Tag ? $tag->get('id') : $tag;
+    $id = $my_tag instanceof \Tag ? $my_tag->get('id') : $my_tag;
 
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
-      ->insert($this->tbl_tags)
+      ->insert($this->tbl_my_tags)
       ->setEqual('tag_custom_id', $id)
       ->setEqual('book_id', $this->get('id'));
     $m->query($q);
@@ -118,24 +118,24 @@ abstract class Book extends \Base\Item
     return $this;
   }
 
-  public function removeTag($tag)
+  public function removeMyTag($my_tag)
   {
-    $id = $tag instanceof \Tag ? $tag->get('id') : $tag;
+    $id = $my_tag instanceof \Tag ? $my_tag->get('id') : $my_tag;
 
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
-      ->delete($this->tbl_tags)
+      ->delete($this->tbl_my_tags)
       ->where(array('tag_custom_id' => $id, 'book_id' => $this->get('id')));
     $m->query($q);
 
     return $this;
   }
 
-  public function removeAllTags()
+  public function removeAllMyTags()
   {
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
-      ->delete($this->tbl_tags)
+      ->delete($this->tbl_my_tags)
       ->where(array('book_id' => $this->get('id')));
     $m->query($q);
 

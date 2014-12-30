@@ -8,7 +8,7 @@ use SQRT\DB\Exception;
 abstract class Author extends \Base\Item
 {
   /** @var \SQRT\DB\Collection|\Book[] */
-  protected $books_arr;
+  protected $my_books_arr;
 
   protected function init()
   {
@@ -45,21 +45,21 @@ abstract class Author extends \Base\Item
   }
 
   /** @return \SQRT\DB\Collection|\Book[] */
-  public function getBooks($reload = false)
+  public function getMyBooks($reload = false)
   {
     $c = $this->getManager()->getCollection('Books');
 
-    if (is_null($this->books_arr) || $reload) {
-      $this->books_arr = $c->find(array('author_id' => $this->get('id')))->getIterator(true);
+    if (is_null($this->my_books_arr) || $reload) {
+      $this->my_books_arr = $c->find(array('author_id' => $this->get('id')))->getIterator(true);
     }
 
-    return $c->setItems($this->books_arr);
+    return $c->setItems($this->my_books_arr);
   }
 
   /** @return static */
-  public function setBooks($books_arr = null)
+  public function setMyBooks($my_books_arr = null)
   {
-    $this->books_arr = $books_arr;
+    $this->my_books_arr = $my_books_arr;
 
     return $this;
   }
