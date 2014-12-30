@@ -1087,7 +1087,7 @@ class Schema
     $func[] = "  /** @return static */\n"
       . "  public function " . Item::MakeSetterName($col) . "(\$$col)\n"
       . "  {\n"
-      . "    return \$this->set('$col', (int)\$$col);\n"
+      . "    return \$this->set('$col', is_null(\${$col}) ? null : (int)\${$col});\n"
       . "  }";
   }
 

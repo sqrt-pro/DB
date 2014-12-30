@@ -62,7 +62,7 @@ abstract class User extends \Base\Item
   /** @return static */
   public function setIsActive($is_active)
   {
-    return $this->set('is_active', (int)$is_active);
+    return $this->set('is_active', is_null($is_active) ? null : (int)$is_active);
   }
 
   public function getType($default = null)
@@ -93,7 +93,7 @@ abstract class User extends \Base\Item
   /** @return static */
   public function setAge($age)
   {
-    return $this->set('age', (int)$age);
+    return $this->set('age', is_null($age) ? null : (int)$age);
   }
 
   public function getName($default = null)

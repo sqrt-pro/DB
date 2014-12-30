@@ -58,7 +58,7 @@ abstract class Book extends \Base\Item
   /** @return static */
   public function setAuthorId($author_id)
   {
-    return $this->set('author_id', (int)$author_id);
+    return $this->set('author_id', is_null($author_id) ? null : (int)$author_id);
   }
 
   /** @return \Author */

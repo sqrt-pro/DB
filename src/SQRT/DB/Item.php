@@ -28,6 +28,14 @@ class Item extends Container
     $this->init();
   }
 
+  /** Установить значение */
+  public function set($name, $value)
+  {
+    $this->vars[$name] = $value;
+
+    return $this;
+  }
+
   /** Сохранение объекта */
   public function save($reload = false)
   {

@@ -171,6 +171,20 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $this->assertEquals($str, $i->get('name'), 'Отключение автоэкранирования по умолчанию');
   }
 
+  function testSetNull()
+  {
+    $m = new \SQRT\DB\Manager();
+    $i = new \SQRT\DB\Item($m);
+
+    $i->set('id', 1);
+
+    $this->assertEquals(array('id' => 1), $i->toArray(), 'Значение ID = 1');
+
+    $i->set('id', null);
+
+    $this->assertEquals(array('id' => null), $i->toArray(), 'Значение ID = null');
+  }
+
   /**
    * @dataProvider dataGetAsDate
    */
