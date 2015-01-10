@@ -284,6 +284,22 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(1, $i->get('after_delete'), 'Триггер afterDelete установил поле');
   }
 
+  function testNoTriggers()
+  {
+    $i = new TestItem($this->getManager(), 'pages');
+    $i->setPrimaryKey('id');
+    $i->set('name', 1);
+    $i->save(false, true);
+
+    $this->assertEquals(1, $i->get('id'), 'Триггер beforeSave не сработал');
+    $this->assertEmpty($i->get('after_save'), 'Триггер afterSave не сработал');
+
+    $i->delete(true);
+
+    $this->assertEmpty($i->get('before_delete'), 'Триггер beforeDelete не сработал');
+    $this->assertEmpty($i->get('after_delete'), 'Триггер afterDelete не сработал');
+  }
+
   protected function getManager()
   {
     $m = new Manager();

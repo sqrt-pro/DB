@@ -37,13 +37,15 @@ class Item extends Container
   }
 
   /** Сохранение объекта */
-  public function save($reload = false)
+  public function save($reload = false, $no_triggers = false)
   {
     $m  = $this->getManager();
     $qb = $m->getQueryBuilder();
     $pk = $this->getPrimaryKey();
 
-    $this->beforeSave();
+    if (!$no_triggers) {
+      $this->beforeSave();
+    }
 
     if ($this->isNew()) {
       $reload = true;
@@ -73,7 +75,9 @@ class Item extends Container
       $this->load();
     }
 
-    $this->afterSave();
+    if (!$no_triggers) {
+      $this->afterSave();
+    }
 
     return $this;
   }
@@ -96,9 +100,11 @@ class Item extends Container
   }
 
   /** Удаление объекта из БД */
-  public function delete()
+  public function delete($no_triggers = false)
   {
-    $this->beforeDelete();
+    if (!$no_triggers) {
+      $this->beforeDelete();
+    }
 
     $m = $this->getManager();
     if (!$pk = $this->getPrimaryKey()) {
@@ -111,7 +117,9 @@ class Item extends Container
 
     $m->query($q);
 
-    $this->afterDelete();
+    if (!$no_triggers) {
+      $this->afterDelete();
+    }
 
     return $this;
   }
