@@ -77,7 +77,12 @@ class Manager
     return $conn['pdo'];
   }
 
-  public function addConnection($host, $user, $pass, $dbname, $charset = 'UTF-8', $name = null)
+  /**
+   * Добавление подключения
+   *
+   * @return static
+   */
+  public function addConnection($host, $user, $pass, $dbname, $charset = 'utf8', $name = null)
   {
     $this->connections[$name ?: 'default'] = array(
       'pdo'     => false,
