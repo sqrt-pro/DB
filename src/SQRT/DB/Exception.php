@@ -12,6 +12,7 @@ class Exception extends \SQRT\Exception
   const FILE_NOT_EXISTS       = 60;
   const PROCESSING_FILE       = 61;
   const NOT_COLLECTION        = 70;
+  const COLUMN_NOT_EXISTS     = 80;
 
   protected static $errors_arr = array(
     self::CONNECTION_NOT_EXISTS => 'Подключение к БД "%s" не существует',
@@ -22,5 +23,6 @@ class Exception extends \SQRT\Exception
     self::FILE_NOT_EXISTS       => 'Файл "%s" не существует',
     self::PROCESSING_FILE       => 'Ошибка при обработке файла: %s',
     self::NOT_COLLECTION        => 'Класс "%s" не является коллекцией',
+    self::COLUMN_NOT_EXISTS     => 'Столбец "%s" не существует',
   );
 } 

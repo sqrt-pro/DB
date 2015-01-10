@@ -45,6 +45,146 @@ class managerTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(array(array('id' => 1, 'name' => 'John')), $res->fetchAll(PDO::FETCH_ASSOC));
   }
 
+  function testFetchAll()
+  {
+    $m = $this->getManager();
+
+    $t = 'pages';
+    $this->fillTable($t);
+
+    $q   = 'SELECT id, name FROM ' . $t . ' WHERE id > :id LIMIT 3';
+    $res = $m->fetchAll($q, null, array('id' => 3));
+
+    $exp = array(
+      array('id' => 4, 'name' => 'John The 4'),
+      array('id' => 5, 'name' => 'John The 5'),
+      array('id' => 6, 'name' => 'John The 6'),
+    );
+    $this->assertEquals($exp, $res, 'Массив без упорядочивания');
+
+    $res = $m->fetchAll($q, 'id', array('id' => 3));
+
+    $exp = array(
+      4 => array('id' => 4, 'name' => 'John The 4'),
+      5 => array('id' => 5, 'name' => 'John The 5'),
+      6 => array('id' => 6, 'name' => 'John The 6'),
+    );
+    $this->assertEquals($exp, $res, 'Массив упорядоченный по столбцу');
+
+    try {
+      $m->fetchAll($q, 'not_exists', array('id' => 3));
+
+      $this->fail('Ожидаемое исключение');
+    } catch (Exception $e) {
+      $this->assertEquals(Exception::COLUMN_NOT_EXISTS, $e->getCode(), 'Код ошибки');
+    }
+
+    $this->assertFalse($m->fetchAll($q, 'ololo', array('id' => 30)), 'Исключения не будет, т.к. выборка пустая');
+  }
+
+  function testEach()
+  {
+    $m = $this->getManager();
+
+    $t = 'pages';
+    $this->fillTable($t);
+
+    $q   = 'SELECT id, name FROM ' . $t . ' WHERE id > :id LIMIT 3';
+    $res = $m->each(
+      $q,
+      function ($row) {
+        return $row['id'];
+      },
+      array('id' => 5)
+    );
+
+    $exp = array(6, 7, 8);
+    $this->assertEquals($exp, $res, 'Результат выполнения');
+
+    $res = $m->each(
+      $q,
+      function ($row) {
+        return $row['id'];
+      },
+      array('id' => 50)
+    );
+
+    $this->assertFalse($res, 'Пустая выборка');
+  }
+
+  function testFetchPair()
+  {
+    $m = $this->getManager();
+
+    $t = 'pages';
+    $this->fillTable($t);
+
+    $q = 'SELECT id, name FROM ' . $t . ' WHERE id > :id LIMIT 3';
+
+    $res = $m->fetchPair($q, array('id' => 3));
+    $exp = array(
+      4 => 'John The 4',
+      5 => 'John The 5',
+      6 => 'John The 6',
+    );
+
+    $this->assertEquals($exp, $res, 'Результат');
+  }
+
+  function testFetchColumn()
+  {
+    $m = $this->getManager();
+
+    $t = 'pages';
+    $this->fillTable($t);
+
+    $q = 'SELECT id, name FROM ' . $t . ' WHERE id > :id LIMIT 3';
+
+    $res = $m->fetchColumn($q, 'id', array('id' => 3));
+    $exp = array(4, 5, 6);
+
+    $this->assertEquals($exp, $res, 'Результат');
+  }
+
+  function testFetchOne()
+  {
+    $m = $this->getManager();
+
+    $t = 'pages';
+    $this->fillTable($t);
+
+    $q = 'SELECT id, name FROM ' . $t . ' WHERE id > :id LIMIT 3';
+
+    $res = $m->fetchOne($q, array('id' => 3));
+    $exp = array('id' => 4, 'name' => 'John The 4');
+
+    $this->assertEquals($exp, $res, 'Результат');
+  }
+
+  function testFetchValue()
+  {
+    $m = $this->getManager();
+
+    $t = 'pages';
+    $this->fillTable($t);
+
+    $q = 'SELECT id, name FROM ' . $t . ' WHERE id > :id LIMIT 3';
+
+    $res = $m->fetchValue($q, null, array('id' => 3));
+    $this->assertEquals(4, $res, 'Если $col не указан - первый столбец');
+
+    $res = $m->fetchValue($q, 'name', array('id' => 3));
+    $this->assertEquals('John The 4', $res, 'Столбец указан явно');
+
+    try {
+      $res = $m->fetchValue($q, 'not_exists', array('id' => 3));
+
+      $this->fail('Ожидаемое исключение');
+    } catch (Exception $e) {
+      $this->assertEquals(Exception::COLUMN_NOT_EXISTS, $e->getCode(), 'Код ошибки');
+    }
+  }
+
   function testQueryBuilderExecute()
   {
     $m = new \SQRT\DB\Manager();
@@ -118,6 +258,41 @@ class managerTest extends PHPUnit_Framework_TestCase
     $m->addConnection(TEST_HOST, TEST_USER, TEST_PASS, TEST_DB);
     $m->query('DROP TABLE IF EXISTS `names`');
     $m->query('DROP TABLE IF EXISTS `test_names`');
+  }
+
+  protected function getManager()
+  {
+    $m = new \SQRT\DB\Manager();
+    $m->addConnection(TEST_HOST, TEST_USER, TEST_PASS, TEST_DB);
+    $m->setPrefix('test_');
+
+    return $m;
+  }
+
+  protected function makeTable($table)
+  {
+    $m = $this->getManager();
+
+    $m->query('DROP TABLE IF EXISTS ' . $table);
+
+    $q = 'CREATE TABLE ' . $table . ' ('
+      . '`id` int(10) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT, '
+      . '`name` varchar(250), '
+      . '`age` int(10) UNSIGNED'
+      . ')';
+
+      $m->query($q);
+  }
+
+  protected function fillTable($table, $num = 10)
+  {
+    $this->makeTable($table);
+    $m = $this->getManager();
+
+    for ($i = 1; $i <= $num; $i++) {
+      $q = 'INSERT INTO ' . $table . ' (id, name, age) VALUES (:id, :name, :age)';
+      $m->query($q, array('id' => $i, 'name' => 'John The ' . $i, 'age' => $i * 5));
+    }
   }
 }
 

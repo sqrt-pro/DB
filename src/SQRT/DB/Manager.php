@@ -3,6 +3,7 @@
 namespace SQRT\DB;
 
 use SQRT\QueryBuilder;
+use SQRT\QueryBuilder\Query;
 
 class Manager
 {
@@ -38,7 +39,7 @@ class Manager
 
     $pdo = $this->getConnection($connection);
 
-    if ($sql instanceof QueryBuilder\Query) {
+    if ($sql instanceof Query) {
       $values = $values ?: $sql->getBindedValues();
       $sql    = $sql->asStatement();
     }
@@ -49,6 +50,108 @@ class Manager
     }
 
     return $stmt;
+  }
+
+  /**
+   * Получить все записи из запроса в виде массива
+   * Если указать $key ключами массива будет значение этого столбца
+   */
+  public function fetchAll($sql, $key = null, $values = null, $connection = null)
+  {
+    $st = $this->query($sql, $values, $connection);
+
+    if (!$res = $st->fetchAll(\PDO::FETCH_ASSOC)) {
+      return false;
+    }
+
+    if (!$key) {
+      return $res;
+    }
+
+    if (!array_key_exists($key, current($res))) {
+      Exception::ThrowError(Exception::COLUMN_NOT_EXISTS, $key);
+    }
+
+    $out = array();
+    foreach ($res as $row) {
+      $out[$row[$key]] = $row;
+    }
+
+    return $out;
+  }
+
+  /**
+   * Вызов $callable к каждому результату выборки
+   * Функция вернет массив с результатами вызова функций
+   */
+  public function each($sql, $callable, $values = null, $connection = null)
+  {
+    $st = $this->query($sql, $values, $connection);
+
+    $out = false;
+    while($row = $st->fetch(\PDO::FETCH_ASSOC)) {
+      $out[] = call_user_func_array($callable, array($row));
+    }
+
+    return $out;
+  }
+
+  /** Получить одну строку в виде массива */
+  public function fetchOne($sql, $values = null, $connection = null)
+  {
+    $st = $this->query($sql, $values, $connection);
+
+    return $st->fetch(\PDO::FETCH_ASSOC);
+  }
+
+  /** Получить значение из запроса */
+  public function fetchValue($sql, $col = null, $values = null, $connection = null)
+  {
+    $st = $this->query($sql, $values, $connection);
+
+    $row = $st->fetch(\PDO::FETCH_ASSOC);
+
+    if (!$col) {
+      return current($row);
+    }
+
+    if (!array_key_exists($col, $row)) {
+      Exception::ThrowError(Exception::COLUMN_NOT_EXISTS, $col);
+    }
+
+    return $row[$col];
+  }
+
+  /** Получить один столбец в виде массива */
+  public function fetchColumn($sql, $col = null, $values = null, $connection = null)
+  {
+    $st = $this->query($sql, $values, $connection);
+
+    if (!$res = $st->fetchAll(\PDO::FETCH_ASSOC)) {
+      return false;
+    }
+
+    if (!array_key_exists($col, current($res))) {
+      Exception::ThrowError(Exception::COLUMN_NOT_EXISTS, $col);
+    }
+
+    $out = false;
+    foreach ($res as $row) {
+      $out[] = $row[$col];
+    }
+
+    return $out;
+  }
+
+  /**
+   * Получить ассоциативный массив ключ-значение из запроса.
+   * В результатах запроса должно быть ровно два столбца!
+   */
+  public function fetchPair($sql, $values = null, $connection = null)
+  {
+    $st = $this->query($sql, $values, $connection);
+
+    return $st->fetchAll(\PDO::FETCH_KEY_PAIR);
   }
 
   /** @return QueryBuilder */
