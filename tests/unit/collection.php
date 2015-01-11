@@ -93,7 +93,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 
   function testFindOne()
   {
-    $this->fillPages(3);
+    $this->fillPages(10);
 
     $m = $this->getManager();
     $c = new Collection($m);
@@ -102,6 +102,9 @@ class CollectionTest extends PHPUnit_Framework_TestCase
     $p = $c->findOne(2);
     $this->assertInstanceOf('SQRT\DB\Item', $p, 'Объект Item');
     $this->assertEquals(2, $p->get('id'), 'ID = 2');
+
+    $p = $c->findOne('id < 10', 'id DESC');
+    $this->assertEquals(9, $p->get('id'), 'ID = 9');
   }
 
   function testMake()

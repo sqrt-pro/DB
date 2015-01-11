@@ -97,12 +97,13 @@ class Collection implements \IteratorAggregate, \Countable
    * Найти и получить один объект
    * @return Item
    */
-  public function findOne($where = null)
+  public function findOne($where = null, $orderby = null)
   {
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
       ->select($this->getTable())
       ->where($where)
+      ->orderby($orderby)
       ->limit(1);
 
     return $this->fetchObject($m->query($q));
