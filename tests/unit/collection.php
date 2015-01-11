@@ -78,6 +78,9 @@ class CollectionTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(5, $c2->count(), '5 элементов загружено');
     $this->assertTrue($c2->isNotEmpty(), 'Коллекция содержит элементы');
 
+    $c1->find('id < 3');
+    $this->assertEquals(2, $c1->count(), 'Новые элементы затирают старые');
+
     $arr = false;
     $c2->map(
       function (\SQRT\DB\Item $item) use (&$arr) {

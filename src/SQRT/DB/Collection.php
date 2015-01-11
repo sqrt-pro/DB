@@ -32,6 +32,8 @@ class Collection implements \IteratorAggregate, \Countable
    */
   public function find($where = null, $orderby = null, $onpage = null, $page = null)
   {
+    $this->items = null;
+
     $q = $this->getManager()
       ->getQueryBuilder()
       ->select($this->getTable())
