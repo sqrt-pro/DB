@@ -14,7 +14,25 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 
   function testEach()
   {
+    $this->fillPages(10);
 
+    $m = $this->getManager();
+    $c = new Collection($m);
+    $c->setTable('pages');
+
+    $this->assertTrue($c->isEmpty(), 'Коллекция пуста');
+
+    $arr = false;
+    $c->each(
+      function (\SQRT\DB\Item $item) use (&$arr) {
+        $arr[] = $item->get('id');
+      },
+      'id > 5'
+    );
+
+    $exp = array(6, 7, 8, 9, 10);
+    $this->assertEquals($exp, $arr, 'Результат');
+    $this->assertTrue($c->isEmpty(), 'Коллекция все еще пуста');
   }
 
   function testCount()
@@ -41,6 +59,14 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 
     $this->assertTrue($c1->isEmpty(), 'Коллекция пуста');
 
+    $arr = false;
+    $c1->map(
+      function (\SQRT\DB\Item $item) use (&$arr) {
+        $arr[] = $item->get('id');
+      }
+    );
+    $this->assertFalse($arr, 'В коллекции нет элементов');
+
     $c1->find('`id` > 5');
 
     $this->assertEquals(5, $c1->count(), '5 элементов после выборки');
@@ -51,6 +77,15 @@ class CollectionTest extends PHPUnit_Framework_TestCase
     $c2->setItems($c1);
     $this->assertEquals(5, $c2->count(), '5 элементов загружено');
     $this->assertTrue($c2->isNotEmpty(), 'Коллекция содержит элементы');
+
+    $arr = false;
+    $c2->map(
+      function (\SQRT\DB\Item $item) use (&$arr) {
+        $arr[] = $item->get('id');
+      }
+    );
+    $exp = array(6, 7, 8, 9, 10);
+    $this->assertEquals($exp, $arr, 'Проход по всем элементам');
   }
 
   function testFindOne()

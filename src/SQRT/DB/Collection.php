@@ -148,10 +148,31 @@ class Collection implements \IteratorAggregate, \Countable
     return new $c($this->getManager(), $this->getTable());
   }
 
-  /** Применение $callable ко всем элементам */
-  public function each($callable)
+  /** Применение $callable ко всем элементам коллекции, полученным ранее */
+  public function map($callable)
   {
-    array_map($callable, $this->items);
+    if (!empty($this->items)) {
+      array_map($callable, $this->items);
+    }
+
+    return $this;
+  }
+
+  /** Применение $callable ко всем элементам выборки, без наполнения коллекции */
+  public function each($callable, $where = null, $orderby = null, $onpage = null, $page = null)
+  {
+    $q = $this->getManager()
+      ->getQueryBuilder()
+      ->select($this->getTable())
+      ->where($where)
+      ->orderby($orderby)
+      ->page($page, $onpage);
+
+    $st = $this->getManager()->query($q);
+
+    while($obj = $this->fetchObject($st)) {
+      call_user_func_array($callable, array($obj));
+    }
 
     return $this;
   }
