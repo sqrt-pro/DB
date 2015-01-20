@@ -28,6 +28,9 @@ class managerTest extends PHPUnit_Framework_TestCase
     $m->addConnection(TEST_HOST, TEST_USER, TEST_PASS, TEST_DB);
     $m->addConnection(TEST_HOST, TEST_USER, TEST_PASS, TEST_DB, 'UTF-8', 'another');
 
+    $this->assertEquals(0, $m->getQueriesCount(), 'Количество запросов = 0');
+    $this->assertEquals(0, $m->getQueriesTime(), 'Время выполнения - 0');
+
     try {
       $m->query('SELECT * FROM `not_exists`');
 
@@ -36,8 +39,15 @@ class managerTest extends PHPUnit_Framework_TestCase
       $this->assertEquals(Exception::QUERY, $e->getCode());
     }
 
+    $this->assertEquals(0, $m->getQueriesCount(), 'Количество запросов = 0, т.к. debug не включен');
+
+    $m->setDebug(true);
+
     $m->query('CREATE TABLE `names` (`id` int(10) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT, `name` varchar(250))');
     $m->query('INSERT INTO `names` (`id`, `name`) VALUES (:id, :name)', array('id' => 1, 'name' => 'John'), 'another');
+
+    $this->assertEquals(2, $m->getQueriesCount(), 'Количество запросов = 2');
+    $this->assertNotEmpty($m->getQueriesTime(), 'Время выполнения больше нуля');
 
     $res = $m->query('SELECT * FROM `names`');
     $this->assertInstanceOf('\PDOStatement', $res, 'Результат запроса есть');

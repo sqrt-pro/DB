@@ -34,7 +34,10 @@ class Manager
   public function query($sql, $values = null, $connection = null)
   {
     if ($this->isDebug()) {
-      $this->queries[] = array('query' => $sql, 'values' => $values);
+      $i = $this->getQueriesCount();
+      $t = microtime(true);
+
+      $this->queries[$i] = array('query' => $sql, 'values' => $values);
     }
 
     $pdo = $this->getConnection($connection);
@@ -45,7 +48,13 @@ class Manager
     }
 
     $stmt = $pdo->prepare($sql);
-    if (!$res = $stmt->execute($values)) {
+    $res = $stmt->execute($values);
+
+    if ($this->isDebug()) {
+      $this->queries[$i]['time'] = microtime(true) - $t;
+    }
+
+    if (!$res) {
       Exception::ThrowError(Exception::QUERY, $stmt->errorInfo());
     }
 
@@ -158,6 +167,32 @@ class Manager
   public function getQueryBuilder()
   {
     return new QueryBuilder($this->getPrefix());
+  }
+
+  /** Массив выполненных запросов к БД (требует debug = true) */
+  public function getQueries()
+  {
+    return $this->queries ?: array();
+  }
+
+  /** Количество выполненных запросов к БД (требует debug = true) */
+  public function getQueriesCount()
+  {
+    return count($this->getQueries());
+  }
+
+  /** Сумма время затраченное на выполнение всех запросов в секундах (требует debug = true) */
+  public function getQueriesTime()
+  {
+    $res = array_reduce($this->getQueries(), function($result, $arr){
+      if (isset($arr['time'])) {
+        $result[] = $arr['time'];
+      }
+
+      return $result;
+    }, array());
+
+    return array_sum($res);
   }
 
   /** @return \PDO */
