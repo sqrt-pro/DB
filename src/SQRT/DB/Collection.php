@@ -2,7 +2,7 @@
 
 namespace SQRT\DB;
 
-class Collection implements \IteratorAggregate, \Countable
+class Collection implements \IteratorAggregate, \Countable, \ArrayAccess
 {
   /** @var Item[] */
   protected $items;
@@ -270,6 +270,41 @@ class Collection implements \IteratorAggregate, \Countable
     $this->items = $items instanceof Collection ? $items->getIterator(true) : $items;
 
     return $this;
+  }
+
+  /** Проверка, есть ли элемент по ключу (ID) */
+  public function has($key)
+  {
+    return isset($this->items[$key]);
+  }
+
+  /**
+   * Получить элемент по ключу (ID)
+   * @return Item
+   */
+  public function get($key)
+  {
+    return $this->has($key) ? $this->items[$key] : false;
+  }
+
+  public function offsetExists($offset)
+  {
+    return $this->has($offset);
+  }
+
+  public function offsetGet($offset)
+  {
+    return $this->get($offset);
+  }
+
+  public function offsetSet($offset, $value)
+  {
+    $this->items[$offset] = $value;
+  }
+
+  public function offsetUnset($offset)
+  {
+    unset($this->items[$offset]);
   }
 
   protected function init()

@@ -49,6 +49,25 @@ class CollectionTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(4, $c->countQuery(array('`id` < 5')), 'Подсчет с условием');
   }
 
+  function testArrayAccess()
+  {
+    $m = $this->getManager();
+    $c = new Collection($m);
+
+    $this->assertEquals(0, $c->count(), '0 элементов');
+    $this->assertFalse($c->has(10), 'Нет id=10');
+
+    $c[10] = new TestItem($m);
+
+    $this->assertCount(1, $c, '1 элемент');
+    $this->assertTrue(isset($c[10]), 'Есть объект');
+    $this->assertInstanceOf('TestItem', $c[10], 'Объект TestItem');
+
+    unset($c[10]);
+
+    $this->assertTrue($c->isEmpty(), 'Пустой набор');
+  }
+
   function testFind()
   {
     $this->fillPages(10);
