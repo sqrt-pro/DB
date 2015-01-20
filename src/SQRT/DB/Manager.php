@@ -195,6 +195,14 @@ class Manager
     return array_sum($res);
   }
 
+  /** Сброс статистики по запросам в БД */
+  public function resetQueries()
+  {
+    $this->queries = null;
+
+    return $this;
+  }
+
   /** @return \PDO */
   public function getConnection($name = null)
   {

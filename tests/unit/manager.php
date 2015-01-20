@@ -49,6 +49,9 @@ class managerTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(2, $m->getQueriesCount(), 'Количество запросов = 2');
     $this->assertNotEmpty($m->getQueriesTime(), 'Время выполнения больше нуля');
 
+    $m->resetQueries();
+    $this->assertEquals(0, $m->getQueriesCount(), 'Статистика сброшена');
+
     $res = $m->query('SELECT * FROM `names`');
     $this->assertInstanceOf('\PDOStatement', $res, 'Результат запроса есть');
 
