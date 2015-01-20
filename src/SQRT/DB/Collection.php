@@ -201,11 +201,20 @@ class Collection implements \IteratorAggregate, \Countable, \ArrayAccess
 
     $sort_arr = array();
     foreach ($this->getIterator() as $item) {
-      $v              = $method ? $item->$method() : $sort($item);
+      $v = $method
+        ? (method_exists($item, $method) ? $item->$method() : $item->get($sort))
+        : $sort($item);
+
       $sort_arr[$v][] = $item;
     }
 
-    $keys        = $asc ? ksort(array_keys($sort_arr)) : krsort(array_keys($sort_arr));
+    $keys = array_keys($sort_arr);
+    if ($asc) {
+      sort($keys);
+    } else {
+      rsort($keys);
+    }
+
     $this->items = array();
     foreach ($keys as $k) {
       foreach ($sort_arr[$k] as $item) {
@@ -276,6 +285,12 @@ class Collection implements \IteratorAggregate, \Countable, \ArrayAccess
   public function has($key)
   {
     return isset($this->items[$key]);
+  }
+
+  /** Список ID элементов */
+  public function getIDs()
+  {
+    return $this->isNotEmpty() ? array_keys($this->items) : array();
   }
 
   /**

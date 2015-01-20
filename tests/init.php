@@ -17,6 +17,11 @@ define('TEST_DB', 'test');
 
 class TestItem extends \SQRT\DB\Item
 {
+  public function getId()
+  {
+    return $this->get('id');
+  }
+
   /** Эквивалент генерируемой функции */
   public function setFile($file, $name = null)
   {
@@ -79,5 +84,10 @@ class TestItem extends \SQRT\DB\Item
   protected function afterDelete()
   {
     $this->set('after_delete', 1);
+  }
+
+  protected function init()
+  {
+    $this->setPrimaryKey('id');
   }
 }

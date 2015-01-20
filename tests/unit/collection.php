@@ -9,7 +9,37 @@ class CollectionTest extends PHPUnit_Framework_TestCase
 {
   function testSort()
   {
+    $m = $this->getManager();
+    $c = new Collection($m);
 
+    for($i = 1; $i <= 5; $i++) {
+      $item = new TestItem($m);
+      $item->set('id', $i);
+      $item->set('anti_id', 5 - $i);
+      $c->add($item);
+    }
+
+    $keys = range(1, 5);
+    $this->assertEquals($keys, $c->getIDs(), 'Сортировка по очереди добавления');
+
+    $c->sort('id', false);
+
+    $keys = range(5, 1);
+    $this->assertEquals($keys, $c->getIDs(), 'Сортировка с использованием Getter`a по убыванию');
+
+    $c->sort('anti_id', false);
+
+    $keys = range(1, 5);
+    $this->assertEquals($keys, $c->getIDs(), 'Сортировка по полю без Getter`a');
+
+    $sort = array(5, 1, 3, 2, 4);
+    $c->sort(
+      function (TestItem $item) use ($sort) {
+        return array_search($item->getId(), $sort);
+      }
+    );
+
+    $this->assertEquals($sort, $c->getIDs(), 'Сортировка с использованием callable');
   }
 
   function testEach()
