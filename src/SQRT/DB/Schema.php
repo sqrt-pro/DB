@@ -965,7 +965,7 @@ class Schema
     $func[] = "  /** Размер файла. \$human - человеческое представление */\n"
       . "  public function {$getter}Size(\$human = true)\n"
       . "  {\n"
-      . "    if (!\$size = \$this->{$getter}Param('file')) {\n"
+      . "    if (!\$size = \$this->{$getter}Param('size')) {\n"
       . "      return false;\n"
       . "    }\n\n"
       . "    return \$human ? \$this->getHumanFileSize(\$size) : \$size;\n"
