@@ -7,7 +7,7 @@ use SQRT\DB\Exception;
 /** Этот файл сгенерирован автоматически по схеме Tags */
 abstract class Tag extends \Base\Item
 {
-  /** @var \SQRT\DB\Collection|\Book[] */
+  /** @var \Collection\Books|\Book[] */
   protected $books_arr;
 
   protected $tbl_books = 'books_tags';
@@ -46,52 +46,44 @@ abstract class Tag extends \Base\Item
     return $this->set('name', $name);
   }
 
-  /** @return \SQRT\DB\Collection|\Book[] */
+  /** @return \Collection\Books|\Book[] */
   public function getBooks($reload = false)
   {
-    $m = $this->getManager();
-    $c = $m->getCollection('Books');
+    $c = $this->getManager()->getCollection('Books');
 
     if (is_null($this->books_arr) || $reload) {
-      $q = $m->getQueryBuilder()
-        ->select('books t')
-        ->columns('t.*')
-        ->join($this->tbl_books . ' j', 't.id = j.book_id')
-        ->where(array('j.tag_custom_id' => $this->get('id')));
-      
-      $this->books_arr = $c->fetch($q)->getIterator(true);
+      $this->books_arr = $this->findBooks()->getIterator(true);
     }
 
     return $c->setItems($this->books_arr);
   }
 
+  /** @return static */
   public function addBook($book)
   {
-    $id = $book instanceof \Book ? $book->get('id') : $book;
-
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
       ->insert($this->tbl_books)
-      ->setEqual('book_id', $id)
+      ->setEqual('book_id', $this->getBookPK($book))
       ->setEqual('tag_custom_id', $this->get('id'));
     $m->query($q);
 
     return $this;
   }
 
+  /** @return static */
   public function removeBook($book)
   {
-    $id = $book instanceof \Book ? $book->get('id') : $book;
-
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
       ->delete($this->tbl_books)
-      ->where(array('book_id' => $id, 'tag_custom_id' => $this->get('id')));
+      ->where(array('book_id' => $this->getBookPK($book), 'tag_custom_id' => $this->get('id')));
     $m->query($q);
 
     return $this;
   }
 
+  /** @return static */
   public function removeAllBooks()
   {
     $m = $this->getManager();
@@ -101,5 +93,24 @@ abstract class Tag extends \Base\Item
     $m->query($q);
 
     return $this;
+  }
+
+  protected function getBookPK($book)
+  {
+    return $book instanceof \Book ? $book->get('id') : $book;
+  }
+
+  /** @return \Collection\Books|\Book[] */
+  protected function findBooks()
+  {
+    $m = $this->getManager();
+    $c = $m->getCollection('Books');
+    $q = $m->getQueryBuilder()
+      ->select('books t')
+      ->columns('t.*')
+      ->join($this->tbl_books . ' j', 't.id = j.book_id')
+      ->where(array('j.tag_custom_id' => $this->get('id')));
+
+    return $c->fetch($q);
   }
 }

@@ -10,6 +10,9 @@ class MyMigration extends AbstractMigration
     $tbl->addColumn("is_active", "boolean", array ( 'default' => 0,));
     $tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
     $tbl->removeColumn("name");
+    if (!$tbl->hasForeignKey("parent_id")) {
+      $tbl->addForeignKey("parent_id", "test_pages", "id", array ());
+    }
     $tbl->save();
   }
 

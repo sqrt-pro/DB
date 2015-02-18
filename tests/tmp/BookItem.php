@@ -10,7 +10,7 @@ abstract class Book extends \Base\Item
   /** @var \Author */
   protected $my_author;
 
-  /** @var \SQRT\DB\Collection|\Tag[] */
+  /** @var \Collection\Tags|\Tag[] */
   protected $my_tags_arr;
 
   protected $tbl_my_tags = 'books_tags';
@@ -69,9 +69,7 @@ abstract class Book extends \Base\Item
     }
 
     if (is_null($this->my_author) || $reload) {
-      $c = $this->getManager()->getCollection('Authors');
-
-      $this->my_author = $c->findOne(array('id' => $id));
+      $this->my_author = $this->findOneMyAuthor($id);
     }
 
     return $this->my_author;
@@ -85,52 +83,44 @@ abstract class Book extends \Base\Item
     return $this->set('author_id', $my_author->get('id'));
   }
 
-  /** @return \SQRT\DB\Collection|\Tag[] */
+  /** @return \Collection\Tags|\Tag[] */
   public function getMyTags($reload = false)
   {
-    $m = $this->getManager();
-    $c = $m->getCollection('Tags');
+    $c = $this->getManager()->getCollection('Tags');
 
     if (is_null($this->my_tags_arr) || $reload) {
-      $q = $m->getQueryBuilder()
-        ->select('tags t')
-        ->columns('t.*')
-        ->join($this->tbl_my_tags . ' j', 't.id = j.tag_custom_id')
-        ->where(array('j.book_id' => $this->get('id')));
-      
-      $this->my_tags_arr = $c->fetch($q)->getIterator(true);
+      $this->my_tags_arr = $this->findTags()->getIterator(true);
     }
 
     return $c->setItems($this->my_tags_arr);
   }
 
+  /** @return static */
   public function addMyTag($my_tag)
   {
-    $id = $my_tag instanceof \Tag ? $my_tag->get('id') : $my_tag;
-
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
       ->insert($this->tbl_my_tags)
-      ->setEqual('tag_custom_id', $id)
+      ->setEqual('tag_custom_id', $this->getMyTagPK($my_tag))
       ->setEqual('book_id', $this->get('id'));
     $m->query($q);
 
     return $this;
   }
 
+  /** @return static */
   public function removeMyTag($my_tag)
   {
-    $id = $my_tag instanceof \Tag ? $my_tag->get('id') : $my_tag;
-
     $m = $this->getManager();
     $q = $m->getQueryBuilder()
       ->delete($this->tbl_my_tags)
-      ->where(array('tag_custom_id' => $id, 'book_id' => $this->get('id')));
+      ->where(array('tag_custom_id' => $this->getMyTagPK($my_tag), 'book_id' => $this->get('id')));
     $m->query($q);
 
     return $this;
   }
 
+  /** @return static */
   public function removeAllMyTags()
   {
     $m = $this->getManager();
@@ -140,5 +130,30 @@ abstract class Book extends \Base\Item
     $m->query($q);
 
     return $this;
+  }
+
+  /** @return \Author */
+  protected function findOneMyAuthor($id)
+  {
+    return $this->getManager()->getCollection('Authors')->findOne(array('id' => $id));
+  }
+
+  protected function getMyTagPK($my_tag)
+  {
+    return $my_tag instanceof \Tag ? $my_tag->get('id') : $my_tag;
+  }
+
+  /** @return \Collection\Tags|\Tag[] */
+  protected function findTags()
+  {
+    $m = $this->getManager();
+    $c = $m->getCollection('Tags');
+    $q = $m->getQueryBuilder()
+      ->select('tags t')
+      ->columns('t.*')
+      ->join($this->tbl_my_tags . ' j', 't.id = j.tag_custom_id')
+      ->where(array('j.book_id' => $this->get('id')));
+
+    return $c->fetch($q);
   }
 }

@@ -672,6 +672,7 @@ class Schema
     $item       = $schema->getItemClass();
     $var        = StaticStringy::underscored($one);
     $getter     = StaticStringy::camelize('get ' . $one);
+    $finder     = StaticStringy::camelize('findOne ' . $one);
     $setter     = StaticStringy::camelize('set ' . $one);
 
     $before[] = "  /** @var {$item} */\n"
@@ -684,16 +685,22 @@ class Schema
       . "      return false;\n"
       . "    }\n\n"
       . "    if (is_null(\$this->{$var}) || \$reload) {\n"
-      . "      \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
-      . "      \$this->{$var} = \$c->findOne(array('{$fk}' => \$id));\n"
+      . "      \$this->{$var} = \$this->{$finder}(\$id);\n"
       . "    }\n\n"
       . "    return \$this->{$var};\n"
       . "  }";
+
     $func[] = "  /** @return static */\n"
       . "  public function {$setter}({$item} \${$var})\n"
       . "  {\n"
       . "    \$this->{$var} = \${$var};\n\n"
       . "    return \$this->set('{$col}', \${$var}->get('{$fk}'));\n"
+      . "  }";
+
+    $after[] = "  /** @return {$item} */\n"
+      . "  protected function {$finder}(\$id)\n"
+      . "  {\n"
+      . "    return \$this->getManager()->getCollection('{$collection}')->findOne(array('{$fk}' => \$id));\n"
       . "  }";
   }
 
@@ -713,15 +720,15 @@ class Schema
     $getter     = StaticStringy::camelize('get ' . $name);
     $setter     = StaticStringy::camelize('set ' . $name);
 
-    $before[] = "  /** @var \\SQRT\\DB\\Collection|{$item}[] */\n"
+    $before[] = "  /** @var \\Collection\\{$collection}|{$item}[] */\n"
       . "  protected \${$var_arr};";
 
-    $func[] = "  /** @return \\SQRT\\DB\\Collection|{$item}[] */\n"
+    $func[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
       . "    \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
-      . "      \$this->{$var_arr} = \$c->find(array('{$fk}' => \$this->get('{$col}')))->getIterator(true);\n"
+      . "      \$this->{$var_arr} = \$this->find{$collection}()->getIterator(true);\n"
       . "    }\n\n"
       . "    return \$c->setItems(\$this->{$var_arr});\n"
       . "  }";
@@ -731,6 +738,12 @@ class Schema
       . "  {\n"
       . "    \$this->{$var_arr} = \${$var_arr};\n\n"
       . "    return \$this;\n"
+      . "  }";
+
+    $after[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
+      . "  protected function find{$collection}()\n"
+      . "  {\n"
+      . "    return \$this->getManager()->getCollection('{$collection}')->find(array('{$fk}' => \$this->get('{$col}')));\n"
       . "  }";
   }
 
@@ -756,55 +769,50 @@ class Schema
     $getter      = StaticStringy::camelize('get ' . $var_name);
     $setter      = StaticStringy::camelize('set ' . $var_name);
     $adder       = StaticStringy::camelize('add ' . $var_one);
+    $getter_id   = StaticStringy::camelize('get ' . $var_one . ' PK');
     $remover     = StaticStringy::camelize('remove ' . $var_one);
     $all_remover = StaticStringy::camelize('remove all ' . $name);
 
-    $before[] = "  /** @var \\SQRT\\DB\\Collection|{$item}[] */\n"
+    $before[] = "  /** @var \\Collection\\{$collection}|{$item}[] */\n"
       . "  protected \${$var_arr};";
 
     $before[] = "  protected \$tbl_{$var_name} = '{$table}';";
 
-    $func[] = "  /** @return \\SQRT\\DB\\Collection|{$item}[] */\n"
+    $func[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
-      . "    \$m = \$this->getManager();\n"
-      . "    \$c = \$m->getCollection('{$collection}');\n\n"
+      . "    \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
-      . "      \$q = \$m->getQueryBuilder()\n"
-      . "        ->select('{$schema_tbl} t')\n"
-      . "        ->columns('t.*')\n"
-      . "        ->join(\$this->tbl_{$var_name} . ' j', 't.{$foreign_id} = j.{$foreign_col}')\n"
-      . "        ->where(array('j.{$my_col}' => \$this->get('{$my_id}')));\n"
-      . "      \n"
-      . "      \$this->{$var_arr} = \$c->fetch(\$q)->getIterator(true);\n"
+      . "      \$this->{$var_arr} = \$this->find{$collection}()->getIterator(true);\n"
       . "    }\n\n"
       . "    return \$c->setItems(\$this->{$var_arr});\n"
       . "  }";
 
-    $func[] = "  public function {$adder}(\${$var_one})\n"
+    $func[] = "  /** @return static */\n"
+      . "  public function {$adder}(\${$var_one})\n"
       . "  {\n"
-      . "    \$id = \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n\n"
       . "    \$m = \$this->getManager();\n"
       . "    \$q = \$m->getQueryBuilder()\n"
       . "      ->insert(\$this->tbl_{$var_name})\n"
-      . "      ->setEqual('{$foreign_col}', \$id)\n"
+      . "      ->setEqual('{$foreign_col}', \$this->{$getter_id}(\${$var_one}))\n"
       . "      ->setEqual('{$my_col}', \$this->get('{$my_id}'));\n"
       . "    \$m->query(\$q);\n\n"
       . "    return \$this;\n"
       . "  }";
 
-    $func[] = "  public function {$remover}(\${$var_one})\n"
+    $func[] = "  /** @return static */\n"
+      . "  public function {$remover}(\${$var_one})\n"
       . "  {\n"
-      . "    \$id = \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n\n"
       . "    \$m = \$this->getManager();\n"
       . "    \$q = \$m->getQueryBuilder()\n"
       . "      ->delete(\$this->tbl_{$var_name})\n"
-      . "      ->where(array('{$foreign_col}' => \$id, '{$my_col}' => \$this->get('{$my_id}')));\n"
+      . "      ->where(array('{$foreign_col}' => \$this->{$getter_id}(\${$var_one}), '{$my_col}' => \$this->get('{$my_id}')));\n"
       . "    \$m->query(\$q);\n\n"
       . "    return \$this;\n"
       . "  }";
 
-    $func[] = "  public function {$all_remover}()\n"
+    $func[] = "  /** @return static */\n"
+      . "  public function {$all_remover}()\n"
       . "  {\n"
       . "    \$m = \$this->getManager();\n"
       . "    \$q = \$m->getQueryBuilder()\n"
@@ -812,6 +820,24 @@ class Schema
       . "      ->where(array('{$my_col}' => \$this->get('{$my_id}')));\n"
       . "    \$m->query(\$q);\n\n"
       . "    return \$this;\n"
+      . "  }";
+
+    $after[] = "  protected function {$getter_id}(\${$var_one})\n"
+      . "  {\n"
+      . "    return \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n"
+      . "  }";
+
+    $after[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
+      . "  protected function find{$collection}()\n"
+      . "  {\n"
+      . "    \$m = \$this->getManager();\n"
+      . "    \$c = \$m->getCollection('{$collection}');\n"
+      . "    \$q = \$m->getQueryBuilder()\n"
+      . "      ->select('{$schema_tbl} t')\n"
+      . "      ->columns('t.*')\n"
+      . "      ->join(\$this->tbl_{$var_name} . ' j', 't.{$foreign_id} = j.{$foreign_col}')\n"
+      . "      ->where(array('j.{$my_col}' => \$this->get('{$my_id}')));\n\n"
+      . "    return \$c->fetch(\$q);\n"
       . "  }";
   }
 
@@ -826,7 +852,7 @@ class Schema
     . ' * Этот файл сгенерирован автоматически по схеме ' . $name . "\n"
     . " *\n"
     . ' * @method ' . $class . '[]|' . $name . ' find($where = null, $orderby = null, $onpage = null, $page = null) Загрузить в коллекцию объекты' . "\n"
-    . ' * @method ' . $class . ' findOne($where = null) Найти и получить один объект' . "\n"
+    . ' * @method ' . $class . ' findOne($where = null, $orderby = null) Найти и получить один объект' . "\n"
     . ' * @method ' . $class . ' make() Создать новый объект' . "\n"
     . ' * @method ' . $class . ' fetchObject(\PDOStatement $statement) Получение объекта из запроса' . "\n"
     . "*/\n"
@@ -1154,7 +1180,7 @@ class Schema
       . ");\n";
 
     return $table_exists
-      ? '    if (!$tbl->hasForeignKey(' . $arr['column'] . ')) {' . "\n  " . $add . "    }\n"
+      ? '    if (!$tbl->hasForeignKey("' . $arr['column'] . '")) {' . "\n  " . $add . "    }\n"
       : $add;
   }
 

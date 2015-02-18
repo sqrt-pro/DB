@@ -7,7 +7,7 @@ use SQRT\DB\Exception;
 /** Этот файл сгенерирован автоматически по схеме Authors */
 abstract class Author extends \Base\Item
 {
-  /** @var \SQRT\DB\Collection|\Book[] */
+  /** @var \Collection\Books|\Book[] */
   protected $my_books_arr;
 
   protected function init()
@@ -44,13 +44,13 @@ abstract class Author extends \Base\Item
     return $this->set('name', $name);
   }
 
-  /** @return \SQRT\DB\Collection|\Book[] */
+  /** @return \Collection\Books|\Book[] */
   public function getMyBooks($reload = false)
   {
     $c = $this->getManager()->getCollection('Books');
 
     if (is_null($this->my_books_arr) || $reload) {
-      $this->my_books_arr = $c->find(array('author_id' => $this->get('id')))->getIterator(true);
+      $this->my_books_arr = $this->findBooks()->getIterator(true);
     }
 
     return $c->setItems($this->my_books_arr);
@@ -62,5 +62,11 @@ abstract class Author extends \Base\Item
     $this->my_books_arr = $my_books_arr;
 
     return $this;
+  }
+
+  /** @return \Collection\Books|\Book[] */
+  protected function findBooks()
+  {
+    return $this->getManager()->getCollection('Books')->find(array('author_id' => $this->get('id')));
   }
 }

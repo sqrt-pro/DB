@@ -143,7 +143,8 @@ class schemaTest extends PHPUnit_Framework_TestCase
 
     $s->addId()
       ->addBool('is_active')
-      ->addFloat('price');
+      ->addFloat('price')
+      ->addForeignKey('parent_id', $s, 'id');
 
     $exp  = file_get_contents($this->temp . '/MigrationUpdate.php');
     $name = 'my migration';

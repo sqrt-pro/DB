@@ -164,7 +164,7 @@ abstract class User extends \Base\Item
   /** Размер файла. $human - человеческое представление */
   public function getPdfSize($human = true)
   {
-    if (!$size = $this->getPdfParam('file')) {
+    if (!$size = $this->getPdfParam('size')) {
       return false;
     }
 
@@ -227,7 +227,7 @@ abstract class User extends \Base\Item
   /** Размер файла. $human - человеческое представление */
   public function getAvatarSize($human = true)
   {
-    if (!$size = $this->getAvatarParam('file')) {
+    if (!$size = $this->getAvatarParam('size')) {
       return false;
     }
 
@@ -317,7 +317,7 @@ abstract class User extends \Base\Item
   /** Размер файла. $human - человеческое представление */
   public function getPhotoThumbSize($human = true)
   {
-    if (!$size = $this->getPhotoThumbParam('file')) {
+    if (!$size = $this->getPhotoThumbParam('size')) {
       return false;
     }
 
@@ -391,7 +391,7 @@ abstract class User extends \Base\Item
   /** Размер файла. $human - человеческое представление */
   public function getPhotoBigSize($human = true)
   {
-    if (!$size = $this->getPhotoBigParam('file')) {
+    if (!$size = $this->getPhotoBigParam('size')) {
       return false;
     }
 
