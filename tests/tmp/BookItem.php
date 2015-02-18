@@ -89,7 +89,7 @@ abstract class Book extends \Base\Item
     $c = $this->getManager()->getCollection('Tags');
 
     if (is_null($this->my_tags_arr) || $reload) {
-      $this->my_tags_arr = $this->findTags()->getIterator(true);
+      $this->my_tags_arr = $this->findMyTags()->getIterator(true);
     }
 
     return $c->setItems($this->my_tags_arr);
@@ -144,7 +144,7 @@ abstract class Book extends \Base\Item
   }
 
   /** @return \Collection\Tags|\Tag[] */
-  protected function findTags()
+  protected function findMyTags()
   {
     $m = $this->getManager();
     $c = $m->getCollection('Tags');

@@ -50,7 +50,7 @@ abstract class Author extends \Base\Item
     $c = $this->getManager()->getCollection('Books');
 
     if (is_null($this->my_books_arr) || $reload) {
-      $this->my_books_arr = $this->findBooks()->getIterator(true);
+      $this->my_books_arr = $this->findMyBooks()->getIterator(true);
     }
 
     return $c->setItems($this->my_books_arr);
@@ -65,7 +65,7 @@ abstract class Author extends \Base\Item
   }
 
   /** @return \Collection\Books|\Book[] */
-  protected function findBooks()
+  protected function findMyBooks()
   {
     return $this->getManager()->getCollection('Books')->find(array('author_id' => $this->get('id')));
   }

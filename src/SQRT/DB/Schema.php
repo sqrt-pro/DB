@@ -731,6 +731,7 @@ class Schema
     $var_arr    = $var . '_arr';
     $getter     = StaticStringy::camelize('get ' . $name);
     $setter     = StaticStringy::camelize('set ' . $name);
+    $finder     = 'find' . $name;
 
     $before[] = "  /** @var \\Collection\\{$collection}|{$item}[] */\n"
       . "  protected \${$var_arr};";
@@ -740,7 +741,7 @@ class Schema
       . "  {\n"
       . "    \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
-      . "      \$this->{$var_arr} = \$this->find{$collection}()->getIterator(true);\n"
+      . "      \$this->{$var_arr} = \$this->{$finder}()->getIterator(true);\n"
       . "    }\n\n"
       . "    return \$c->setItems(\$this->{$var_arr});\n"
       . "  }";
@@ -753,7 +754,7 @@ class Schema
       . "  }";
 
     $after[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
-      . "  protected function find{$collection}()\n"
+      . "  protected function {$finder}()\n"
       . "  {\n"
       . "    return \$this->getManager()->getCollection('{$collection}')->find(array('{$fk}' => \$this->get('{$col}')));\n"
       . "  }";
@@ -784,6 +785,7 @@ class Schema
     $getter_id   = StaticStringy::camelize('get ' . $var_one . ' PK');
     $remover     = StaticStringy::camelize('remove ' . $var_one);
     $all_remover = StaticStringy::camelize('remove all ' . $name);
+    $finder      = StaticStringy::camelize('find ' . $name);
 
     $before[] = "  /** @var \\Collection\\{$collection}|{$item}[] */\n"
       . "  protected \${$var_arr};";
@@ -795,7 +797,7 @@ class Schema
       . "  {\n"
       . "    \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
-      . "      \$this->{$var_arr} = \$this->find{$collection}()->getIterator(true);\n"
+      . "      \$this->{$var_arr} = \$this->{$finder}()->getIterator(true);\n"
       . "    }\n\n"
       . "    return \$c->setItems(\$this->{$var_arr});\n"
       . "  }";
@@ -840,7 +842,7 @@ class Schema
       . "  }";
 
     $after[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
-      . "  protected function find{$collection}()\n"
+      . "  protected function {$finder}()\n"
       . "  {\n"
       . "    \$m = \$this->getManager();\n"
       . "    \$c = \$m->getCollection('{$collection}');\n"
