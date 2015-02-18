@@ -36,6 +36,27 @@ class Item extends Container
     return $this;
   }
 
+  /**
+   * Добавить флаг в битовую маску
+   * @return static
+   */
+  public function bitAdd($name, $value)
+  {
+    return $this->set($name, $this->get($name, 0) | $value);
+  }
+
+  /** Удалить флаг из битовой маски */
+  public function bitRemove($name, $value)
+  {
+    return $this->set($name, $this->get($name, 0) & ~ $value);
+  }
+
+  /** Проверить, есть ли флаг в битовой маске */
+  public function bitCheck($name, $value)
+  {
+    return (bool) ($this->get($name, 0) & $value);
+  }
+
   /** Сохранение объекта */
   public function save($reload = false, $no_triggers = false)
   {

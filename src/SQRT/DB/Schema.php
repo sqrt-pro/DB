@@ -22,6 +22,7 @@ class Schema
   const INDEX_FULLTEXT = 'fulltext';
 
   const COL_INT       = 'integer';
+  const COL_BITMASK   = 'bitmask';
   const COL_CHAR      = 'string';
   const COL_ENUM      = 'enum';
   const COL_TIMESTAMP = 'timestamp';
@@ -126,6 +127,13 @@ class Schema
     return $this->add($col, static::COL_INT, $opts);
   }
 
+  public function addBitmask($col, array $options, $default = 0)
+  {
+    $def = array('length' => count($options), 'signed' => false, 'default' => $default);
+
+    return $this->add($col, static::COL_BITMASK, $def, $options);
+  }
+
   public function addBool($col)
   {
     return $this->add($col, static::COL_BOOL, array('default' => 0));
@@ -136,7 +144,7 @@ class Schema
     return $this->add($col, static::COL_CHAR, array('length' => $length, 'null' => true));
   }
 
-  public function addEnum($col, $options, $default = null)
+  public function addEnum($col, array $options, $default = null)
   {
     $def = array('null' => true, 'length' => 255);
     if ($default) {
@@ -593,6 +601,10 @@ class Schema
 
         case self::COL_ENUM:
           $this->makeItemEnum($def, $func, $before, $after);
+          break;
+
+        case self::COL_BITMASK:
+          $this->makeItemBitmask($def, $func, $before, $after);
           break;
 
         case self::COL_TIMESTAMP:
@@ -1059,22 +1071,9 @@ class Schema
   {
     $col        = $def['column'];
     $getter     = Item::MakeGetterName($col);
-    $name_for   = 'GetNameFor' . StaticStringy::upperCamelize($col);
-    $getter_arr = 'Get' . StaticStringy::upperCamelize($col) . 'Arr';
+    $name_for   = StaticStringy::upperCamelize('get name for ' . $col);
+    $getter_arr = StaticStringy::upperCamelize('get ' . $col . ' arr');
     $const      = $names = '';
-
-
-    if (!empty($def['options'])) {
-      foreach ($def['options'] as $v) {
-        $c = strtoupper($col . '_' . $v);
-
-        $const[] = "  const " . $c . " = '$v';";
-        $names[] = "    self::" . $c . " => '$v',";
-      }
-
-      $before[] = join("\n", $const);
-    }
-    $before[] = "  protected static \${$col}_arr = array(\n" . join("\n", $names) . "\n  );";
 
     $func[] = $this->makeItemGetter($col);
     $func[] = "  public function {$getter}Name()\n"
@@ -1090,10 +1089,94 @@ class Schema
       . "    return \$this->set('$col', \$$col);\n"
       . "  }";
 
+    if (!empty($def['options'])) {
+      foreach ($def['options'] as $v) {
+        $c = strtoupper($col . '_' . $v);
+        $f = StaticStringy::camelize('is ' . $col . ' ' . $v);
+
+        $const[] = "  const " . $c . " = '$v';";
+        $names[] = "    self::" . $c . " => '$v',";
+        $func[]  = "  public function {$f}()\n"
+          . "  {\n"
+          . "    return \$this->{$getter}() == static::{$c};\n"
+          . "  }";
+      }
+
+      $before[] = join("\n", $const);
+    }
+    $before[] = "  protected static \${$col}_arr = array(\n" . join("\n", $names) . "\n  );";
+
     $after[] = "  public static function {$getter_arr}()\n"
       . "  {\n"
       . "    return static::\${$col}_arr;\n"
       . "  }";
+    $after[] = "  public static function {$name_for}(\${$col})\n"
+      . "  {\n"
+      . "    \$a = static::{$getter_arr}();\n\n"
+      . "    return isset(\$a[\${$col}]) ? \$a[\${$col}] : false;\n"
+      . "  }";
+  }
+
+  protected function makeItemBitmask($def, &$func, &$before, &$after)
+  {
+    $col        = $def['column'];
+    $getter     = Item::MakeGetterName($col);
+    $name_for   = StaticStringy::upperCamelize('get name for ' . $col);
+    $getter_arr = StaticStringy::upperCamelize('get ' . $col . ' arr');
+    $adder      = StaticStringy::camelize('add ' . $col);
+    $hasser     = StaticStringy::camelize('has ' . $col);
+    $remove     = StaticStringy::camelize('remove ' . $col);
+    $const      = $names = '';
+
+    $func[] = $this->makeItemGetter($col);
+
+    $func[] = "  public function {$hasser}(\$$col)\n"
+      . "  {\n"
+      . "    return \$this->bitCheck('$col', \$$col);\n"
+      . "  }";
+
+    $func[] = "  /** @return static */\n"
+      . "  public function {$adder}(\$$col)\n"
+      . "  {\n"
+      . "    if (!empty(\${$col}) && !static::{$name_for}(\${$col})) {\n"
+      . "      Exception::ThrowError(Exception::ENUM_BAD_VALUE, '{$col}', \${$col});\n"
+      . "    }\n\n"
+      . "    return \$this->bitAdd('$col', \$$col);\n"
+      . "  }";
+
+    $func[] = "  /** @return static */\n"
+      . "  public function {$remove}(\$$col)\n"
+      . "  {\n"
+      . "    if (!empty(\${$col}) && !static::{$name_for}(\${$col})) {\n"
+      . "      Exception::ThrowError(Exception::ENUM_BAD_VALUE, '{$col}', \${$col});\n"
+      . "    }\n\n"
+      . "    return \$this->bitRemove('$col', \$$col);\n"
+      . "  }";
+
+    if (!empty($def['options'])) {
+      $i = 0;
+      foreach ($def['options'] as $v) {
+        $c = strtoupper($col . '_' . $v);
+        $b = pow(2, $i++);
+        $f = $hasser . StaticStringy::upperCamelize($v);
+
+        $const[] = "  const {$c} = {$b};";
+        $names[] = "    self::{$c} => '{$v}',";
+        $func[]  = "  public function {$f}()\n"
+          . "  {\n"
+          . "    return \$this->{$hasser}(static::{$c});\n"
+          . "  }";
+      }
+
+      $before[] = join("\n", $const);
+    }
+    $before[] = "  protected static \${$col}_arr = array(\n" . join("\n", $names) . "\n  );";
+
+    $after[] = "  public static function {$getter_arr}()\n"
+      . "  {\n"
+      . "    return static::\${$col}_arr;\n"
+      . "  }";
+
     $after[] = "  public static function {$name_for}(\${$col})\n"
       . "  {\n"
       . "    \$a = static::{$getter_arr}();\n\n"
@@ -1140,6 +1223,9 @@ class Schema
 
     if ($arr['type'] == static::COL_ENUM) {
       $arr['type'] = static::COL_CHAR;
+    }
+    if ($arr['type'] == static::COL_BITMASK) {
+      $arr['type'] = static::COL_INT;
     }
 
     if (in_array($arr['type'], array(static::COL_FILE, static::COL_IMAGE))) {

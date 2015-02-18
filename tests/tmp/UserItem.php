@@ -15,6 +15,16 @@ abstract class User extends \Base\Item
     self::TYPE_OLD => 'old',
   );
 
+  const LEVEL_GUEST = 1;
+  const LEVEL_OWNER = 2;
+  const LEVEL_ADMIN = 4;
+
+  protected static $level_arr = array(
+    self::LEVEL_GUEST => 'guest',
+    self::LEVEL_OWNER => 'owner',
+    self::LEVEL_ADMIN => 'admin',
+  );
+
   const PHOTO_SIZE_THUMB = 'thumb';
   const PHOTO_SIZE_BIG = 'big';
 
@@ -32,6 +42,7 @@ abstract class User extends \Base\Item
         'id',
         'is_active',
         'type',
+        'level',
         'age',
         'name',
         'price',
@@ -83,6 +94,61 @@ abstract class User extends \Base\Item
     }
 
     return $this->set('type', $type);
+  }
+
+  public function isTypeNew()
+  {
+    return $this->getType() == static::TYPE_NEW;
+  }
+
+  public function isTypeOld()
+  {
+    return $this->getType() == static::TYPE_OLD;
+  }
+
+  public function getLevel($default = null)
+  {
+    return $this->get('level', $default);
+  }
+
+  public function hasLevel($level)
+  {
+    return $this->bitCheck('level', $level);
+  }
+
+  /** @return static */
+  public function addLevel($level)
+  {
+    if (!empty($level) && !static::GetNameForLevel($level)) {
+      Exception::ThrowError(Exception::ENUM_BAD_VALUE, 'level', $level);
+    }
+
+    return $this->bitAdd('level', $level);
+  }
+
+  /** @return static */
+  public function removeLevel($level)
+  {
+    if (!empty($level) && !static::GetNameForLevel($level)) {
+      Exception::ThrowError(Exception::ENUM_BAD_VALUE, 'level', $level);
+    }
+
+    return $this->bitRemove('level', $level);
+  }
+
+  public function hasLevelGuest()
+  {
+    return $this->hasLevel(static::LEVEL_GUEST);
+  }
+
+  public function hasLevelOwner()
+  {
+    return $this->hasLevel(static::LEVEL_OWNER);
+  }
+
+  public function hasLevelAdmin()
+  {
+    return $this->hasLevel(static::LEVEL_ADMIN);
   }
 
   public function getAge($default = null)
@@ -459,6 +525,18 @@ abstract class User extends \Base\Item
     $a = static::GetTypeArr();
 
     return isset($a[$type]) ? $a[$type] : false;
+  }
+
+  public static function GetLevelArr()
+  {
+    return static::$level_arr;
+  }
+
+  public static function GetNameForLevel($level)
+  {
+    $a = static::GetLevelArr();
+
+    return isset($a[$level]) ? $a[$level] : false;
   }
 
   /**

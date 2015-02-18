@@ -185,6 +185,29 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $this->assertEquals(array('id' => null), $i->toArray(), 'Значение ID = null');
   }
 
+  function testBitmask()
+  {
+    $m = new \SQRT\DB\Manager();
+    $i = new \SQRT\DB\Item($m);
+
+    $this->assertFalse($i->bitCheck('level', 1), 'Бит еще не установлен');
+
+    $i->bitAdd('level', 1);
+    $i->bitAdd('level', 4);
+
+    $this->assertEquals(5, $i->get('level'), 'Значение битовой маски с двумя битами');
+    $this->assertTrue($i->bitCheck('level', 1), 'Бит 1 установлен');
+    $this->assertFalse($i->bitCheck('level', 2), 'Бит 2 не установлен');
+    $this->assertTrue($i->bitCheck('level', 4), 'Бит 4 установлен');
+
+    $i->bitRemove('level', 1);
+    $this->assertFalse($i->bitCheck('level', 1), 'Бит 1 удален');
+    $this->assertEquals(4, $i->get('level'), 'Значение битовой маски c одним битом');
+
+    $i->bitRemove('level', 1);
+    $this->assertFalse($i->bitCheck('level', 1), 'Удаление выключенного бита');
+  }
+
   /**
    * @dataProvider dataGetAsDate
    */

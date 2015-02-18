@@ -11,6 +11,7 @@ class MyMigration extends AbstractMigration
     $tbl->addColumn("age", "integer", array ( 'length' => 10, 'signed' => true, 'default' => 0,));
     $tbl->addColumn("name", "string", array ( 'length' => 255, 'null' => true,));
     $tbl->addColumn("type", "string", array ( 'null' => true, 'length' => 255,));
+    $tbl->addColumn("access", "integer", array ( 'length' => 3, 'signed' => false, 'default' => 0,));
     $tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
     $tbl->addColumn("text", "text", array ( 'null' => true, 'limit' => 16777216,));
     $tbl->addColumn("image", "text", array ( 'null' => true,));

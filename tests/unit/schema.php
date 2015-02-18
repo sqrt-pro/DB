@@ -122,6 +122,7 @@ class schemaTest extends PHPUnit_Framework_TestCase
       ->addInt('age')
       ->addChar('name')
       ->addEnum('type', array('one', 'two'))
+      ->addBitmask('access', array('guest', 'owner', 'god'))
       ->addFloat('price')
       ->addText('text', true)
       ->addFile('image');
@@ -259,6 +260,7 @@ class schemaTest extends PHPUnit_Framework_TestCase
     $s->addId()
       ->addBool('is_active')
       ->addEnum('type', array('new', 'old'))
+      ->addBitmask('level', array('guest', 'owner', 'admin'))
       ->addInt('age')
       ->addChar('name')
       ->addFloat('price')
