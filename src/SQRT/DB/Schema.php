@@ -1131,16 +1131,14 @@ class Schema
     $remove     = StaticStringy::camelize('remove ' . $col);
     $const      = $names = '';
 
-    $func[] = $this->makeItemGetter($col);
-
     $func[] = "  public function {$hasser}(\$$col)\n"
       . "  {\n"
       . "    return \$this->bitCheck('$col', \$$col);\n"
       . "  }";
 
-    $func[] = "  public function {$getter}(\$$col)\n"
+    $func[] = "  public function {$getter}()\n"
       . "  {\n"
-      . "    return \$this->bitGet('$col', array_keys(static::{$getter_arr}));\n"
+      . "    return \$this->bitGet('$col', array_keys(static::{$getter_arr}()));\n"
       . "  }";
 
     $func[] = "  public function {$setter}(array \$bits, \$clean = true)\n"

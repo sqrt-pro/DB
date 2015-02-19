@@ -106,19 +106,14 @@ abstract class User extends \Base\Item
     return $this->getType() == static::TYPE_OLD;
   }
 
-  public function getLevel($default = null)
-  {
-    return $this->get('level', $default);
-  }
-
   public function hasLevel($level)
   {
     return $this->bitCheck('level', $level);
   }
 
-  public function getLevel($level)
+  public function getLevel()
   {
-    return $this->bitGet('level', array_keys(static::GetLevelArr));
+    return $this->bitGet('level', array_keys(static::GetLevelArr()));
   }
 
   public function setLevel(array $bits, $clean = true)
