@@ -116,6 +116,16 @@ abstract class User extends \Base\Item
     return $this->bitCheck('level', $level);
   }
 
+  public function getLevel($level)
+  {
+    return $this->bitGet('level', array_keys(static::GetLevelArr));
+  }
+
+  public function setLevel(array $bits, $clean = true)
+  {
+    return $this->bitSet('level', $bits, $clean);
+  }
+
   /** @return static */
   public function addLevel($level)
   {

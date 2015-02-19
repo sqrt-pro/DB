@@ -45,6 +45,34 @@ class Item extends Container
     return $this->set($name, $this->get($name, 0) | $value);
   }
 
+  /** Установить список битов из массива. $clean - обнулить значение до */
+  public function bitSet($name, array $bits, $clean = true)
+  {
+    if ($clean) {
+      $this->set($name, 0);
+    }
+
+    foreach ($bits as $b) {
+      $this->bitAdd($name, $b);
+    }
+
+    return $this;
+  }
+
+  /** Получить значение битовой маски в виде массива опций */
+  public function bitGet($name, array $options)
+  {
+    $arr = array();
+
+    foreach ($options as $b) {
+      if ($this->bitCheck($name, $b)) {
+        $arr[] = $b;
+      }
+    }
+
+    return $arr;
+  }
+
   /** Удалить флаг из битовой маски */
   public function bitRemove($name, $value)
   {

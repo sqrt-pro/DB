@@ -1122,6 +1122,7 @@ class Schema
   protected function makeItemBitmask($def, &$func, &$before, &$after)
   {
     $col        = $def['column'];
+    $setter     = Item::MakeSetterName($col);
     $getter     = Item::MakeGetterName($col);
     $name_for   = StaticStringy::upperCamelize('get name for ' . $col);
     $getter_arr = StaticStringy::upperCamelize('get ' . $col . ' arr');
@@ -1135,6 +1136,16 @@ class Schema
     $func[] = "  public function {$hasser}(\$$col)\n"
       . "  {\n"
       . "    return \$this->bitCheck('$col', \$$col);\n"
+      . "  }";
+
+    $func[] = "  public function {$getter}(\$$col)\n"
+      . "  {\n"
+      . "    return \$this->bitGet('$col', array_keys(static::{$getter_arr}));\n"
+      . "  }";
+
+    $func[] = "  public function {$setter}(array \$bits, \$clean = true)\n"
+      . "  {\n"
+      . "    return \$this->bitSet('$col', \$bits, \$clean);\n"
       . "  }";
 
     $func[] = "  /** @return static */\n"

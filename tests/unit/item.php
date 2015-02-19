@@ -199,6 +199,7 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $this->assertTrue($i->bitCheck('level', 1), 'Бит 1 установлен');
     $this->assertFalse($i->bitCheck('level', 2), 'Бит 2 не установлен');
     $this->assertTrue($i->bitCheck('level', 4), 'Бит 4 установлен');
+    $this->assertEquals(array(1, 4), $i->bitGet('level', array(1, 2, 4)), 'Значение битовой маски');
 
     $i->bitRemove('level', 1);
     $this->assertFalse($i->bitCheck('level', 1), 'Бит 1 удален');
@@ -206,6 +207,12 @@ class ItemTest extends PHPUnit_Framework_TestCase
 
     $i->bitRemove('level', 1);
     $this->assertFalse($i->bitCheck('level', 1), 'Удаление выключенного бита');
+
+    $i->bitSet('level', array(2, 4));
+    $this->assertEquals(array(2, 4), $i->bitGet('level', array(1, 2, 4)), 'Биты установлены с обнулением');
+
+    $i->bitSet('level', array(1, 4), false);
+    $this->assertEquals(array(1, 2, 4), $i->bitGet('level', array(1, 2, 4)), 'Биты установлены без обнулением');
   }
 
   /**
