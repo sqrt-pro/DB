@@ -43,6 +43,7 @@ class schemaTest extends PHPUnit_Framework_TestCase
 
     $books
       ->addOneToOne($authors, null, null, Schema::FK_RESTRICT, Schema::FK_CASCADE, 'MyAuthors', 'MyAuthor')
+      ->addOneToOne($authors, 'redactor_id', null, Schema::FK_RESTRICT, Schema::FK_CASCADE, 'Redactors', 'Redactor')
       ->addManyToMany($tags, $books_tags, 'tag_custom_id', null, null, null, 'MyTags', 'MyTag');
 
     $tags->addManyToMany($books, $books_tags, null, 'tag_custom_id');

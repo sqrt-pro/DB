@@ -268,7 +268,7 @@ class Schema
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
-    $t = $s->getTable();
+    $n = $name ?: $s->getName();
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
       Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
@@ -279,12 +279,12 @@ class Schema
     $this->addInt($col, null, true, 11);
     $this->addForeignKey($col, $s, $foreign_id, $on_delete, $on_update);
 
-    $this->relations[$t] = array(
+    $this->relations[$n] = array(
       'type'       => static::RELATION_ONE_TO_ONE,
       'column'     => $col,
       'schema'     => $s,
       'foreign_id' => $foreign_id,
-      'name'       => $name ?: $s->getName(),
+      'name'       => $n,
       'one'        => $one ?: $s->getItemClass(false),
     );
 
@@ -305,7 +305,7 @@ class Schema
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
-    $t = $s->getTable();
+    $n = $name ?: $s->getName();
 
     if (!$foreign_id = $foreign_id ?: $s->getPrimaryKey()) {
       Exception::ThrowError(Exception::PK_NOT_SET, $s->getName());
@@ -321,7 +321,7 @@ class Schema
       $join_table = StaticStringy::underscored(join(' ', $arr));
     }
 
-    $this->relations[$t] = array(
+    $this->relations[$n] = array(
       'type'        => static::RELATION_MANY_TO_MANY,
       'column'      => $my_col ?: StaticStringy::underscored($this->getItemClass(false) . '_id'),
       'schema'      => $s,
@@ -329,7 +329,7 @@ class Schema
       'foreign_col' => $foreign_col ?: StaticStringy::underscored($s->getItemClass(false) . '_id'),
       'my_id'       => $my_id ?: $this->getPrimaryKey(),
       'table'       => $join_table,
-      'name'        => $name ?: $s->getName(),
+      'name'        => $n,
       'one'         => $one ?: $s->getItemClass(false),
     );
 
@@ -347,14 +347,14 @@ class Schema
   {
     $m = $this->getManager();
     $s = $schema instanceof Schema ? $schema : $m->getSchema($schema, true);
-    $t = $s->getTable();
+    $n = $name ?: $s->getName();
 
-    $this->relations[$t] = array(
+    $this->relations[$n] = array(
       'type'       => static::RELATION_ONE_TO_MANY,
       'column'     => $col ?: $this->getPrimaryKey(),
       'schema'     => $s,
       'foreign_id' => $foreign_id ?: StaticStringy::underscored($this->getItemClass(false) . '_id'),
-      'name'       => $name ?: $s->getName(),
+      'name'       => $n,
       'one'        => $one ?: $s->getItemClass(false),
     );
 
