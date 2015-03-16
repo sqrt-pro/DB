@@ -118,7 +118,9 @@ class Manager
   {
     $st = $this->query($sql, $values, $connection);
 
-    $row = $st->fetch(\PDO::FETCH_ASSOC);
+    if (!$row = $st->fetch(\PDO::FETCH_ASSOC)) {
+      return false;
+    }
 
     if (!$col) {
       return current($row);

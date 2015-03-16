@@ -189,6 +189,9 @@ class managerTest extends PHPUnit_Framework_TestCase
     $res = $m->fetchValue($q, 'name', array('id' => 3));
     $this->assertEquals('John The 4', $res, 'Столбец указан явно');
 
+    $res = $m->fetchValue($q, 'name', array('id' => 30));
+    $this->assertFalse($res, 'Пустая выборка');
+
     try {
       $res = $m->fetchValue($q, 'not_exists', array('id' => 3));
 
