@@ -11,8 +11,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 define('TEST_MIGR', realpath(__DIR__ . '/../migrations'));
 define('TEST_HOST', 'localhost');
-define('TEST_USER', 'test');
-define('TEST_PASS', 'test');
+define('TEST_USER', 'root');
+define('TEST_PASS', '');
 define('TEST_DB', 'test');
 
 class TestItem extends \SQRT\DB\Item
