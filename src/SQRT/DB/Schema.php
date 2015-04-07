@@ -477,7 +477,9 @@ class Schema
   {
     $cl = $this->item_class ?: '\\' . StaticStringy::removeRight($this->getName(), 's');
 
-    return $with_namespace ? $cl : array_pop(explode('\\', $cl));
+    $a = explode('\\', $cl);
+
+    return $with_namespace ? $cl : end($a);
   }
 
   /**

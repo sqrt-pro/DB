@@ -59,19 +59,19 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $this->assertArrayHasKey('thumb', $res);
     $this->assertArrayHasKey('big', $res);
 
-    $this->assertFileExists($this->temp . $res['big']['file'], 'Файл сохранился');
-    $this->assertEquals('jpg', $res['big']['extension'], 'Расширение');
-    $this->assertEquals(17890, $res['big']['size'], 'Размер');
-    $this->assertEquals('vertical.jpg', $res['big']['name'], 'Название');
-    $this->assertEquals(225, $res['big']['width'], 'Ширина');
-    $this->assertEquals(300, $res['big']['height'], 'Высота');
+    $this->assertFileExists($this->temp . $res['big']['file'], 'Файл сохранился Big');
+    $this->assertEquals('jpg', $res['big']['extension'], 'Расширение Big');
+    $this->assertEquals(filesize($this->temp . $res['big']['file']), $res['big']['size'], 'Размер Big');
+    $this->assertEquals('vertical.jpg', $res['big']['name'], 'Название Big');
+    $this->assertEquals(225, $res['big']['width'], 'Ширина Big');
+    $this->assertEquals(300, $res['big']['height'], 'Высота Big');
 
-    $this->assertFileExists($this->temp . $res['thumb']['file'], 'Файл сохранился');
-    $this->assertEquals('jpg', $res['thumb']['extension'], 'Расширение');
-    $this->assertEquals(3606, $res['thumb']['size'], 'Размер');
-    $this->assertEquals('vertical.jpg', $res['thumb']['name'], 'Название');
-    $this->assertEquals(99, $res['thumb']['width'], 'Ширина');
-    $this->assertEquals(100, $res['thumb']['height'], 'Высота');
+    $this->assertFileExists($this->temp . $res['thumb']['file'], 'Файл сохранился Thumb');
+    $this->assertEquals('jpg', $res['thumb']['extension'], 'Расширение Thumb');
+    $this->assertEquals(filesize($this->temp . $res['thumb']['file']), $res['thumb']['size'], 'Размер Thumb');
+    $this->assertEquals('vertical.jpg', $res['thumb']['name'], 'Название Thumb');
+    $this->assertEquals(99, $res['thumb']['width'], 'Ширина Thumb');
+    $this->assertEquals(100, $res['thumb']['height'], 'Высота Thumb');
   }
 
   function testSave()
