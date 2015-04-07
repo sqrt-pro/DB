@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../init.php';
-
 use SQRT\DB\Manager;
 use SQRT\DB\Collection;
 
@@ -44,7 +42,7 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $this->assertFileExists($this->temp . $res['file'], 'Файл сохранился');
     $this->assertEquals('php', $res['extension']);
     $this->assertEquals(filesize(__FILE__), $res['size'], 'Размер верный');
-    $this->assertEquals('item.php', $res['name'], 'Название файла');
+    $this->assertEquals('ItemTest.php', $res['name'], 'Название файла');
   }
 
   function testAddPhoto()

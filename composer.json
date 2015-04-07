@@ -1,26 +1,29 @@
 {
-    "name": "sqrt-pro/db",
-    "description": "DB is part of SQRT Framework",
-    "homepage": "http://fw.sqrt.pro",
-    "type": "library",
-    "license": "MIT",
-    "require": {
-        "php": ">=5.3.0",
-        "sqrt-pro/exception": "dev-master",
-        "sqrt-pro/query-builder": "dev-master",
-        "sqrt-pro/helpers": "dev-master",
-        "sqrt-pro/image": "dev-master",
-        "sqrt-pro/url": "dev-master",
-        "danielstjules/stringy": "dev-master",
-        "robmorgan/phinx": "*"
-    },
-    "autoload": {
-        "psr-0": {
-            "SQRT": "src"
-        }
-    },
-    "config":{
-        "bin-dir":"bin"
-    },
-    "minimum-stability": "dev"
+  "name": "sqrt-pro/db",
+  "description": "DB is part of SQRT Framework",
+  "homepage": "http://fw.sqrt.pro",
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=5.3.0",
+    "sqrt-pro/exception": "dev-master",
+    "sqrt-pro/query-builder": "dev-master",
+    "sqrt-pro/helpers": "dev-master",
+    "sqrt-pro/image": "dev-master",
+    "sqrt-pro/url": "dev-master",
+    "danielstjules/stringy": "dev-master",
+    "robmorgan/phinx": "*"
+  },
+  "require-dev": {
+    "satooshi/php-coveralls": "dev-master"
+  },
+  "autoload": {
+    "psr-0": {
+      "SQRT": "src"
+    }
+  },
+  "config": {
+    "bin-dir": "bin"
+  },
+  "minimum-stability": "dev"
 }

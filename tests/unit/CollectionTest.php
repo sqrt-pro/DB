@@ -1,7 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../init.php';
-
 use SQRT\DB\Manager;
 use SQRT\DB\Collection;
 
