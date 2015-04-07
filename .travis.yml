@@ -7,7 +7,6 @@ php:
   - 5.6
 
 before_script:
-  - mkdir -p bin
   - composer install
   - mysql -e "create database IF NOT EXISTS test;" -uroot
 
@@ -16,4 +15,4 @@ script:
   - phpunit
 
 after_script:
-  - php bin/coveralls -v
+  - php vendor/bin/coveralls -v
