@@ -10,6 +10,9 @@ abstract class Book extends \Base\Item
   /** @var \Author */
   protected $my_author;
 
+  /** @var \Author */
+  protected $redactor;
+
   /** @var \Collection\Tags|\Tag[] */
   protected $my_tags_arr;
 
@@ -24,6 +27,7 @@ abstract class Book extends \Base\Item
         'id',
         'name',
         'author_id',
+        'redactor_id',
       )
     );
   }
@@ -61,6 +65,17 @@ abstract class Book extends \Base\Item
     return $this->set('author_id', is_null($author_id) ? null : (int)$author_id);
   }
 
+  public function getRedactorId($default = null)
+  {
+    return (int)$this->get('redactor_id', $default);
+  }
+
+  /** @return static */
+  public function setRedactorId($redactor_id)
+  {
+    return $this->set('redactor_id', is_null($redactor_id) ? null : (int)$redactor_id);
+  }
+
   /** @return \Author */
   public function getMyAuthor($reload = false)
   {
@@ -81,6 +96,28 @@ abstract class Book extends \Base\Item
     $this->my_author = $my_author;
 
     return $this->set('author_id', $my_author->get('id'));
+  }
+
+  /** @return \Author */
+  public function getRedactor($reload = false)
+  {
+    if (!$id = $this->get('redactor_id')) {
+      return false;
+    }
+
+    if (is_null($this->redactor) || $reload) {
+      $this->redactor = $this->findOneRedactor($id);
+    }
+
+    return $this->redactor;
+  }
+
+  /** @return static */
+  public function setRedactor(\Author $redactor)
+  {
+    $this->redactor = $redactor;
+
+    return $this->set('redactor_id', $redactor->get('id'));
   }
 
   /** @return \Collection\Tags|\Tag[] */
@@ -134,6 +171,12 @@ abstract class Book extends \Base\Item
 
   /** @return \Author */
   protected function findOneMyAuthor($id)
+  {
+    return $this->getManager()->getCollection('Authors')->findOne(array('id' => $id));
+  }
+
+  /** @return \Author */
+  protected function findOneRedactor($id)
   {
     return $this->getManager()->getCollection('Authors')->findOne(array('id' => $id));
   }
