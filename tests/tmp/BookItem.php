@@ -13,7 +13,7 @@ abstract class Book extends \Base\Item
   /** @var \Author */
   protected $redactor;
 
-  /** @var \Collection\Tags|\Tag[] */
+  /** @var \Repository\Tags|\Tag[] */
   protected $my_tags_arr;
 
   protected $tbl_my_tags = 'books_tags';
@@ -120,10 +120,10 @@ abstract class Book extends \Base\Item
     return $this->set('redactor_id', $redactor->get('id'));
   }
 
-  /** @return \Collection\Tags|\Tag[] */
+  /** @return \Repository\Tags|\Tag[] */
   public function getMyTags($reload = false)
   {
-    $c = $this->getManager()->getCollection('Tags');
+    $c = $this->getManager()->getRepository('Tags');
 
     if (is_null($this->my_tags_arr) || $reload) {
       $this->my_tags_arr = $this->findMyTags()->getIterator(true);
@@ -172,13 +172,13 @@ abstract class Book extends \Base\Item
   /** @return \Author */
   protected function findOneMyAuthor($id)
   {
-    return $this->getManager()->getCollection('Authors')->findOne(array('id' => $id));
+    return $this->getManager()->getRepository('Authors')->findOne(array('id' => $id));
   }
 
   /** @return \Author */
   protected function findOneRedactor($id)
   {
-    return $this->getManager()->getCollection('Authors')->findOne(array('id' => $id));
+    return $this->getManager()->getRepository('Authors')->findOne(array('id' => $id));
   }
 
   protected function getMyTagPK($my_tag)
@@ -186,11 +186,11 @@ abstract class Book extends \Base\Item
     return $my_tag instanceof \Tag ? $my_tag->get('id') : $my_tag;
   }
 
-  /** @return \Collection\Tags|\Tag[] */
+  /** @return \Repository\Tags|\Tag[] */
   protected function findMyTags()
   {
     $m = $this->getManager();
-    $c = $m->getCollection('Tags');
+    $c = $m->getRepository('Tags');
     $q = $m->getQueryBuilder()
       ->select('tags t')
       ->columns('t.*')

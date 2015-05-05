@@ -245,24 +245,24 @@ class managerTest extends PHPUnit_Framework_TestCase
     $s->setItemClass('\User');
     $m->addSchema($s);
 
-    $c = $m->getCollection('Users');
-    $this->assertInstanceOf('SQRT\DB\Collection', $c, 'Класс коллекции по умолчанию');
+    $c = $m->getRepository('Users');
+    $this->assertInstanceOf('SQRT\DB\Repository', $c, 'Класс коллекции по умолчанию');
     $this->assertEquals('users', $c->getTable(), 'Таблица из схемы');
     $this->assertEquals('\User', $c->getItemClass(), 'Класс Item из Схемы');
 
-    $m->setCollectionClass('users', 'TestCollection');
+    $m->setRepositoryClass('users', 'TestRepository');
 
-    $c = $m->getCollection('Users');
-    $this->assertInstanceOf('TestCollection', $c, 'Заданный класс для коллекции');
+    $c = $m->getRepository('Users');
+    $this->assertInstanceOf('TestRepository', $c, 'Заданный класс для коллекции');
     $this->assertEquals('test', $c->getTable(), 'Таблица из init()');
     $this->assertEquals('\TestItem', $c->getItemClass(), 'Класс Item из init()');
 
     try {
-      $m->setCollectionClass('users', 'managerTest');
+      $m->setRepositoryClass('users', 'managerTest');
 
       $this->fail('Ожидаемое исключение');
     } catch (Exception $e) {
-      $this->assertEquals(\SQRT\DB\Exception::NOT_COLLECTION, $e->getCode(), 'Код ошибки');
+      $this->assertEquals(\SQRT\DB\Exception::NOT_REPOSITORY, $e->getCode(), 'Код ошибки');
     }
   }
 
@@ -310,7 +310,7 @@ class managerTest extends PHPUnit_Framework_TestCase
   }
 }
 
-class TestCollection extends \SQRT\DB\Collection
+class TestRepository extends \SQRT\DB\Repository
 {
   protected function init()
   {

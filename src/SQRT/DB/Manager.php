@@ -20,7 +20,7 @@ class Manager
   protected $connections;
   protected $schema_namespace = '\\Schema';
 
-  protected $collections;
+  protected $repositories;
   protected $queries;
 
   protected $debug = false;
@@ -134,7 +134,7 @@ class Manager
   }
 
   /** Получить один столбец в виде массива */
-  public function fetchColumn($sql, $col = null, $values = null, $connection = null)
+  public function fetchColumn($sql, $col, $values = null, $connection = null)
   {
     $st = $this->query($sql, $values, $connection);
 
@@ -275,10 +275,10 @@ class Manager
     return !empty($this->schemas) ? $this->schemas : false;
   }
 
-  /** @return Collection */
-  public function getCollection($name, $default = 'SQRT\DB\Collection')
+  /** @return Repository */
+  public function getRepository($name, $default = 'SQRT\DB\Repository')
   {
-    if ($cl = $this->getCollectionClass($name)) {
+    if ($cl = $this->getRepositoryClass($name)) {
       return new $cl($this);
     }
 
@@ -286,31 +286,31 @@ class Manager
       Exception::ThrowError(Exception::SCHEMA_NOT_EXISTS, $name);
     }
 
-    /** @var $obj Collection */
+    /** @var $obj Repository */
     $obj = new $default($this, $s->getTable(), $s->getItemClass());
 
     return $obj;
   }
 
   /** Класс для коллекции */
-  public function getCollectionClass($name)
+  public function getRepositoryClass($name)
   {
     $name = strtolower($name);
 
-    return isset($this->collections[$name]) ? $this->collections[$name] : false;
+    return isset($this->repositories[$name]) ? $this->repositories[$name] : false;
   }
 
   /**
    * Класс для коллекции
    * @return static
    */
-  public function setCollectionClass($name, $class)
+  public function setRepositoryClass($name, $class)
   {
-    if (!class_exists($class) || !in_array('SQRT\DB\Collection', class_parents($class))) {
-      Exception::ThrowError(Exception::NOT_COLLECTION, $class);
+    if (!class_exists($class) || !in_array('SQRT\DB\Repository', class_parents($class))) {
+      Exception::ThrowError(Exception::NOT_REPOSITORY, $class);
     }
 
-    $this->collections[strtolower($name)] = $class;
+    $this->repositories[strtolower($name)] = $class;
 
     return $this;
   }

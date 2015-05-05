@@ -11,7 +11,7 @@ class Exception extends \SQRT\Exception
   const ENUM_BAD_VALUE        = 50;
   const FILE_NOT_EXISTS       = 60;
   const PROCESSING_FILE       = 61;
-  const NOT_COLLECTION        = 70;
+  const NOT_REPOSITORY        = 70;
   const COLUMN_NOT_EXISTS     = 80;
 
   protected static $errors_arr = array(
@@ -22,7 +22,7 @@ class Exception extends \SQRT\Exception
     self::ENUM_BAD_VALUE        => 'Поле "%s" не содержит варианта "%s"',
     self::FILE_NOT_EXISTS       => 'Файл "%s" не существует',
     self::PROCESSING_FILE       => 'Ошибка при обработке файла: %s',
-    self::NOT_COLLECTION        => 'Класс "%s" не является коллекцией',
+    self::NOT_REPOSITORY        => 'Класс "%s" не является репозиторием',
     self::COLUMN_NOT_EXISTS     => 'Столбец "%s" не существует',
   );
 } 

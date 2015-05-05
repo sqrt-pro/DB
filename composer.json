@@ -12,7 +12,8 @@
     "sqrt-pro/image": "dev-master",
     "sqrt-pro/url": "dev-master",
     "danielstjules/stringy": "dev-master",
-    "robmorgan/phinx": "*"
+    "robmorgan/phinx": "*",
+    "doctrine/collections": "~1.3"
   },
   "require-dev": {
     "satooshi/php-coveralls": "dev-master"

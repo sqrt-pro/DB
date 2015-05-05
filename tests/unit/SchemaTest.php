@@ -268,14 +268,14 @@ class schemaTest extends PHPUnit_Framework_TestCase
       ->addImage('avatar')
       ->addImage('photo', array('thumb', 'big'));
 
-    $exp = file_get_contents($this->temp . '/UsersCollection.php');
+//    file_put_contents($this->temp . '/UsersRepository.php', $s->makeRepository());
 
-//    file_put_contents($this->temp . '/UsersCollection.php', $s->makeCollection());
-    $this->assertEquals($exp, $s->makeCollection(), 'Коллекция');
-
-    $exp = file_get_contents($this->temp . '/UserItem.php');
+    $exp = file_get_contents($this->temp . '/UsersRepository.php');
+    $this->assertEquals($exp, $s->makeRepository(), 'Репозиторий');
 
 //    file_put_contents($this->temp . '/UserItem.php', $s->makeItem());
+
+    $exp = file_get_contents($this->temp . '/UserItem.php');
     $this->assertEquals($exp, $s->makeItem(), 'Item');
   }
 

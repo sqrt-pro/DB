@@ -1,7 +1,7 @@
 <?php
 
 use SQRT\DB\Manager;
-use SQRT\DB\Collection;
+use SQRT\DB\Repository;
 
 class ItemTest extends PHPUnit_Framework_TestCase
 {
@@ -77,7 +77,7 @@ class ItemTest extends PHPUnit_Framework_TestCase
   function testSave()
   {
     $m = $this->getManager();
-    $c = new Collection($m);
+    $c = new Repository($m);
     $c->setTable('pages');
 
     $p = $c->make();
@@ -85,7 +85,7 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $p->set('name', 'Hello');
     $p->save();
 
-    $this->assertEquals(1, $c->countQuery(), 'В базе создался один объект');
+    $this->assertEquals(1, $c->count(), 'В базе создался один объект');
 
     $this->assertEquals(1, $p->get('id'), 'Primary Key сохраняется после insert');
     $this->assertFalse($p->isNew(), 'Флаг is new снят');
@@ -94,7 +94,7 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $p->set('name', 'World');
     $p->save();
 
-    $this->assertEquals(1, $c->countQuery(), 'В базе остался один объект');
+    $this->assertEquals(1, $c->count(), 'В базе остался один объект');
 
     $p1 = $c->findOne(1);
     $this->assertEquals('World', $p1->get('name'), 'Изменения сохранились');
@@ -112,7 +112,7 @@ class ItemTest extends PHPUnit_Framework_TestCase
   function testDelete()
   {
     $m = $this->getManager();
-    $c = new Collection($m);
+    $c = new Repository($m);
     $c->setTable('pages');
 
     $p = $c->make();
@@ -131,13 +131,13 @@ class ItemTest extends PHPUnit_Framework_TestCase
     }
 
     $p->delete();
-    $this->assertEquals(0, $c->countQuery(), 'Записей в таблице нет');
+    $this->assertEquals(0, $c->count(), 'Записей в таблице нет');
   }
 
   function testFieldsSave()
   {
     $m = $this->getManager();
-    $c = new Collection($m);
+    $c = new Repository($m);
     $c->setTable('pages');
 
     $p = $c->make();

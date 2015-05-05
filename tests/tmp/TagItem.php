@@ -7,7 +7,7 @@ use SQRT\DB\Exception;
 /** Этот файл сгенерирован автоматически по схеме Tags */
 abstract class Tag extends \Base\Item
 {
-  /** @var \Collection\Books|\Book[] */
+  /** @var \Repository\Books|\Book[] */
   protected $books_arr;
 
   protected $tbl_books = 'books_tags';
@@ -46,10 +46,10 @@ abstract class Tag extends \Base\Item
     return $this->set('name', $name);
   }
 
-  /** @return \Collection\Books|\Book[] */
+  /** @return \Repository\Books|\Book[] */
   public function getBooks($reload = false)
   {
-    $c = $this->getManager()->getCollection('Books');
+    $c = $this->getManager()->getRepository('Books');
 
     if (is_null($this->books_arr) || $reload) {
       $this->books_arr = $this->findBooks()->getIterator(true);
@@ -100,11 +100,11 @@ abstract class Tag extends \Base\Item
     return $book instanceof \Book ? $book->get('id') : $book;
   }
 
-  /** @return \Collection\Books|\Book[] */
+  /** @return \Repository\Books|\Book[] */
   protected function findBooks()
   {
     $m = $this->getManager();
-    $c = $m->getCollection('Books');
+    $c = $m->getRepository('Books');
     $q = $m->getQueryBuilder()
       ->select('books t')
       ->columns('t.*')

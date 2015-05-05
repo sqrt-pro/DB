@@ -51,7 +51,7 @@ class Schema
 
   protected $item_class;
   protected $item_base_class       = '\Base\Item';
-  protected $collection_base_class = '\Base\Collection';
+  protected $repository_base_class = '\Base\Repository';
 
   protected $indexes;
   protected $columns;
@@ -403,19 +403,19 @@ class Schema
     return $this;
   }
 
-  /** Базовый класс, от которого наследуются Collection */
-  public function getCollectionBaseClass()
+  /** Базовый класс, от которого наследуются Repository */
+  public function getRepositoryBaseClass()
   {
-    return $this->collection_base_class;
+    return $this->repository_base_class;
   }
 
   /**
-   * Базовый класс, от которого наследуются Collection
+   * Базовый класс, от которого наследуются Repository
    * @return static
    */
-  public function setCollectionBaseClass($collection_base_class)
+  public function setRepositoryBaseClass($repository_base_class)
   {
-    $this->collection_base_class = $collection_base_class;
+    $this->repository_base_class = $repository_base_class;
 
     return $this;
   }
@@ -682,7 +682,7 @@ class Schema
     $fk     = $relation['foreign_id'];
     $one    = $relation['one'];
 
-    $collection = $schema->getName();
+    $repository = $schema->getName();
     $item       = $schema->getItemClass();
     $var        = StaticStringy::underscored($one);
     $getter     = StaticStringy::camelize('get ' . $one);
@@ -714,7 +714,7 @@ class Schema
     $after[] = "  /** @return {$item} */\n"
       . "  protected function {$finder}(\$id)\n"
       . "  {\n"
-      . "    return \$this->getManager()->getCollection('{$collection}')->findOne(array('{$fk}' => \$id));\n"
+      . "    return \$this->getManager()->getRepository('{$repository}')->findOne(array('{$fk}' => \$id));\n"
       . "  }";
   }
 
@@ -727,7 +727,7 @@ class Schema
     $name   = $relation['name'];
     $one    = $relation['one'];
 
-    $collection = $schema->getName();
+    $repository = $schema->getName();
     $item       = $schema->getItemClass();
     $var        = StaticStringy::underscored($name);
     $var_arr    = $var . '_arr';
@@ -735,13 +735,13 @@ class Schema
     $setter     = StaticStringy::camelize('set ' . $name);
     $finder     = 'find' . $name;
 
-    $before[] = "  /** @var \\Collection\\{$collection}|{$item}[] */\n"
+    $before[] = "  /** @var \\Repository\\{$repository}|{$item}[] */\n"
       . "  protected \${$var_arr};";
 
-    $func[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
+    $func[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
-      . "    \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
+      . "    \$c = \$this->getManager()->getRepository('{$repository}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
       . "      \$this->{$var_arr} = \$this->{$finder}()->getIterator(true);\n"
       . "    }\n\n"
@@ -755,10 +755,10 @@ class Schema
       . "    return \$this;\n"
       . "  }";
 
-    $after[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
+    $after[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
       . "  protected function {$finder}()\n"
       . "  {\n"
-      . "    return \$this->getManager()->getCollection('{$collection}')->find(array('{$fk}' => \$this->get('{$col}')));\n"
+      . "    return \$this->getManager()->getRepository('{$repository}')->find(array('{$fk}' => \$this->get('{$col}')));\n"
       . "  }";
   }
 
@@ -776,7 +776,7 @@ class Schema
     $foreign_col = $relation['foreign_col'];
 
     $schema_tbl  = $schema->getTable();
-    $collection  = $schema->getName();
+    $repository  = $schema->getName();
     $item        = $schema->getItemClass();
     $var_name    = StaticStringy::underscored($name);
     $var_one     = StaticStringy::underscored($one);
@@ -789,15 +789,15 @@ class Schema
     $all_remover = StaticStringy::camelize('remove all ' . $name);
     $finder      = StaticStringy::camelize('find ' . $name);
 
-    $before[] = "  /** @var \\Collection\\{$collection}|{$item}[] */\n"
+    $before[] = "  /** @var \\Repository\\{$repository}|{$item}[] */\n"
       . "  protected \${$var_arr};";
 
     $before[] = "  protected \$tbl_{$var_name} = '{$table}';";
 
-    $func[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
+    $func[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
-      . "    \$c = \$this->getManager()->getCollection('{$collection}');\n\n"
+      . "    \$c = \$this->getManager()->getRepository('{$repository}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
       . "      \$this->{$var_arr} = \$this->{$finder}()->getIterator(true);\n"
       . "    }\n\n"
@@ -843,11 +843,11 @@ class Schema
       . "    return \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n"
       . "  }";
 
-    $after[] = "  /** @return \\Collection\\{$collection}|{$item}[] */\n"
+    $after[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
       . "  protected function {$finder}()\n"
       . "  {\n"
       . "    \$m = \$this->getManager();\n"
-      . "    \$c = \$m->getCollection('{$collection}');\n"
+      . "    \$c = \$m->getRepository('{$repository}');\n"
       . "    \$q = \$m->getQueryBuilder()\n"
       . "      ->select('{$schema_tbl} t')\n"
       . "      ->columns('t.*')\n"
@@ -857,8 +857,8 @@ class Schema
       . "  }";
   }
 
-  /** Генерация коллекции */
-  public function makeCollection($namespace = 'Collection')
+  /** Генерация репозитория */
+  public function makeRepository($namespace = 'Repository')
   {
     $class = $this->getItemClass();
     $name = $this->getName();
@@ -867,12 +867,12 @@ class Schema
     . "/**\n"
     . ' * Этот файл сгенерирован автоматически по схеме ' . $name . "\n"
     . " *\n"
-    . ' * @method ' . $class . '[]|' . $name . ' find($where = null, $orderby = null, $onpage = null, $page = null) Загрузить в коллекцию объекты' . "\n"
+    . ' * @method ' . $class . '[]|\Base\Collection find($where = null, $orderby = null, $onpage = null, $page = null) Получить коллекцию объектов' . "\n"
     . ' * @method ' . $class . ' findOne($where = null, $orderby = null) Найти и получить один объект' . "\n"
     . ' * @method ' . $class . ' make() Создать новый объект' . "\n"
     . ' * @method ' . $class . ' fetchObject(\PDOStatement $statement) Получение объекта из запроса' . "\n"
     . "*/\n"
-    . "class " . $name . " extends " . $this->getCollectionBaseClass() . "\n"
+    . "class " . $name . " extends " . $this->getRepositoryBaseClass() . "\n"
     . "{\n"
     . "  protected function init()\n"
     . "  {\n"
