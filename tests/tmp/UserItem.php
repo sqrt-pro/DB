@@ -3,6 +3,7 @@
 namespace ORM;
 
 use SQRT\DB\Exception;
+use SQRT\DB\Collection;
 
 /** Этот файл сгенерирован автоматически по схеме Users */
 abstract class User extends \Base\Item

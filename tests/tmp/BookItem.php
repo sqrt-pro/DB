@@ -3,6 +3,7 @@
 namespace ORM;
 
 use SQRT\DB\Exception;
+use SQRT\DB\Collection;
 
 /** Этот файл сгенерирован автоматически по схеме Books */
 abstract class Book extends \Base\Item
@@ -13,7 +14,7 @@ abstract class Book extends \Base\Item
   /** @var \Author */
   protected $redactor;
 
-  /** @var \Repository\Tags|\Tag[] */
+  /** @var Collection|\Tag[] */
   protected $my_tags_arr;
 
   protected $tbl_my_tags = 'books_tags';
@@ -120,16 +121,14 @@ abstract class Book extends \Base\Item
     return $this->set('redactor_id', $redactor->get('id'));
   }
 
-  /** @return \Repository\Tags|\Tag[] */
+  /** @return Collection|\Tag[] */
   public function getMyTags($reload = false)
   {
-    $c = $this->getManager()->getRepository('Tags');
-
     if (is_null($this->my_tags_arr) || $reload) {
-      $this->my_tags_arr = $this->findMyTags()->getIterator(true);
+      $this->my_tags_arr = $this->findMyTags();
     }
 
-    return $c->setItems($this->my_tags_arr);
+    return clone $this->my_tags_arr;
   }
 
   /** @return static */
@@ -186,7 +185,7 @@ abstract class Book extends \Base\Item
     return $my_tag instanceof \Tag ? $my_tag->get('id') : $my_tag;
   }
 
-  /** @return \Repository\Tags|\Tag[] */
+  /** @return Collection|\Tag[] */
   protected function findMyTags()
   {
     $m = $this->getManager();

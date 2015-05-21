@@ -3,11 +3,12 @@
 namespace ORM;
 
 use SQRT\DB\Exception;
+use SQRT\DB\Collection;
 
 /** Этот файл сгенерирован автоматически по схеме Authors */
 abstract class Author extends \Base\Item
 {
-  /** @var \Repository\Books|\Book[] */
+  /** @var Collection|\Book[] */
   protected $my_books_arr;
 
   protected function init()
@@ -44,16 +45,14 @@ abstract class Author extends \Base\Item
     return $this->set('name', $name);
   }
 
-  /** @return \Repository\Books|\Book[] */
+  /** @return Collection|\Book[] */
   public function getMyBooks($reload = false)
   {
-    $c = $this->getManager()->getRepository('Books');
-
     if (is_null($this->my_books_arr) || $reload) {
-      $this->my_books_arr = $this->findMyBooks()->getIterator(true);
+      $this->my_books_arr = $this->findMyBooks();
     }
 
-    return $c->setItems($this->my_books_arr);
+    return clone $this->my_books_arr;
   }
 
   /** @return static */
@@ -64,7 +63,7 @@ abstract class Author extends \Base\Item
     return $this;
   }
 
-  /** @return \Repository\Books|\Book[] */
+  /** @return Collection|\Book[] */
   protected function findMyBooks()
   {
     return $this->getManager()->getRepository('Books')->find(array('author_id' => $this->get('id')));

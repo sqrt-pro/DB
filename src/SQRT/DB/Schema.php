@@ -652,7 +652,8 @@ class Schema
 
     // Генерация кода класса
     $str = "<?php\n\nnamespace $namespace;\n\n"
-      . "use SQRT\\DB\\Exception;\n\n"
+      . "use SQRT\\DB\\Exception;\n"
+      . "use SQRT\\DB\\Collection;\n\n"
       . "/** Этот файл сгенерирован автоматически по схеме {$this->getName()} */\n"
       . "abstract class " . $this->getItemClass(false) . " extends " . $this->getItemBaseClass() . "\n"
       . "{\n"
@@ -735,17 +736,16 @@ class Schema
     $setter     = StaticStringy::camelize('set ' . $name);
     $finder     = 'find' . $name;
 
-    $before[] = "  /** @var \\Repository\\{$repository}|{$item}[] */\n"
+    $before[] = "  /** @var Collection|{$item}[] */\n"
       . "  protected \${$var_arr};";
 
-    $func[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
+    $func[] = "  /** @return Collection|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
-      . "    \$c = \$this->getManager()->getRepository('{$repository}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
-      . "      \$this->{$var_arr} = \$this->{$finder}()->getIterator(true);\n"
+      . "      \$this->{$var_arr} = \$this->{$finder}();\n"
       . "    }\n\n"
-      . "    return \$c->setItems(\$this->{$var_arr});\n"
+      . "    return clone \$this->{$var_arr};\n"
       . "  }";
 
     $func[] = "  /** @return static */\n"
@@ -755,7 +755,7 @@ class Schema
       . "    return \$this;\n"
       . "  }";
 
-    $after[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
+    $after[] = "  /** @return Collection|{$item}[] */\n"
       . "  protected function {$finder}()\n"
       . "  {\n"
       . "    return \$this->getManager()->getRepository('{$repository}')->find(array('{$fk}' => \$this->get('{$col}')));\n"
@@ -789,19 +789,18 @@ class Schema
     $all_remover = StaticStringy::camelize('remove all ' . $name);
     $finder      = StaticStringy::camelize('find ' . $name);
 
-    $before[] = "  /** @var \\Repository\\{$repository}|{$item}[] */\n"
+    $before[] = "  /** @var Collection|{$item}[] */\n"
       . "  protected \${$var_arr};";
 
     $before[] = "  protected \$tbl_{$var_name} = '{$table}';";
 
-    $func[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
+    $func[] = "  /** @return Collection|{$item}[] */\n"
       . "  public function {$getter}(\$reload = false)\n"
       . "  {\n"
-      . "    \$c = \$this->getManager()->getRepository('{$repository}');\n\n"
       . "    if (is_null(\$this->{$var_arr}) || \$reload) {\n"
-      . "      \$this->{$var_arr} = \$this->{$finder}()->getIterator(true);\n"
+      . "      \$this->{$var_arr} = \$this->{$finder}();\n"
       . "    }\n\n"
-      . "    return \$c->setItems(\$this->{$var_arr});\n"
+      . "    return clone \$this->{$var_arr};\n"
       . "  }";
 
     $func[] = "  /** @return static */\n"
@@ -843,7 +842,7 @@ class Schema
       . "    return \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n"
       . "  }";
 
-    $after[] = "  /** @return \\Repository\\{$repository}|{$item}[] */\n"
+    $after[] = "  /** @return Collection|{$item}[] */\n"
       . "  protected function {$finder}()\n"
       . "  {\n"
       . "    \$m = \$this->getManager();\n"
