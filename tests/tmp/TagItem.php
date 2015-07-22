@@ -60,12 +60,18 @@ abstract class Tag extends \Base\Item
   /** @return static */
   public function addBook($book)
   {
-    $m = $this->getManager();
-    $q = $m->getQueryBuilder()
-      ->insert($this->tbl_books)
-      ->setEqual('book_id', $this->getBookPK($book))
-      ->setEqual('tag_custom_id', $this->get('id'));
-    $m->query($q);
+    if (is_array($book) || $book instanceof \Traversable) {
+      foreach ($book as $id) {
+        $this->addBook($id);
+      }
+    } else {
+      $m = $this->getManager();
+      $q = $m->getQueryBuilder()
+        ->insert($this->tbl_books)
+        ->setEqual('book_id', $this->getBookPK($book))
+        ->setEqual('tag_custom_id', $this->get('id'));
+      $m->query($q);
+    }
 
     return $this;
   }
@@ -78,6 +84,26 @@ abstract class Tag extends \Base\Item
       ->delete($this->tbl_books)
       ->where(array('book_id' => $this->getBookPK($book), 'tag_custom_id' => $this->get('id')));
     $m->query($q);
+
+    return $this;
+  }
+
+  /** @return static */
+  public function syncBooks($array)
+  {
+    $ids     = (array) $this->getBookPK($this->getBooks());
+    $new_ids = (array) $this->getBookPK($array);
+
+    $drop = array_diff($ids, $new_ids);
+    $add  = array_diff($new_ids, $ids);
+
+    if (!empty($drop)) {
+      $this->removeBook($drop);
+    }
+
+    if (!empty($add)) {
+      $this->addBook($add);
+    }
 
     return $this;
   }
@@ -96,6 +122,15 @@ abstract class Tag extends \Base\Item
 
   protected function getBookPK($book)
   {
+    if (is_array($book) || $book instanceof \Traversable) {
+      $ids = array();
+      foreach ($book as $item) {
+        $ids = $this->getBookPK($item);
+      }
+
+      return $ids;
+    }
+
     return $book instanceof \Book ? $book->get('id') : $book;
   }
 

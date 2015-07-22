@@ -786,6 +786,7 @@ class Schema
     $adder       = StaticStringy::camelize('add ' . $var_one);
     $getter_id   = StaticStringy::camelize('get ' . $var_one . ' PK');
     $remover     = StaticStringy::camelize('remove ' . $var_one);
+    $sync        = StaticStringy::camelize('sync ' . $name);
     $all_remover = StaticStringy::camelize('remove all ' . $name);
     $finder      = StaticStringy::camelize('find ' . $name);
 
@@ -806,12 +807,18 @@ class Schema
     $func[] = "  /** @return static */\n"
       . "  public function {$adder}(\${$var_one})\n"
       . "  {\n"
-      . "    \$m = \$this->getManager();\n"
-      . "    \$q = \$m->getQueryBuilder()\n"
-      . "      ->insert(\$this->tbl_{$var_name})\n"
-      . "      ->setEqual('{$foreign_col}', \$this->{$getter_id}(\${$var_one}))\n"
-      . "      ->setEqual('{$my_col}', \$this->get('{$my_id}'));\n"
-      . "    \$m->query(\$q);\n\n"
+      . "    if (is_array(\${$var_one}) || \${$var_one} instanceof \\Traversable) {\n"
+      . "      foreach (\${$var_one} as \$id) {\n"
+      . "        \$this->{$adder}(\$id);\n"
+      . "      }\n"
+      . "    } else {\n"
+      . "      \$m = \$this->getManager();\n"
+      . "      \$q = \$m->getQueryBuilder()\n"
+      . "        ->insert(\$this->tbl_{$var_name})\n"
+      . "        ->setEqual('{$foreign_col}', \$this->{$getter_id}(\${$var_one}))\n"
+      . "        ->setEqual('{$my_col}', \$this->get('{$my_id}'));\n"
+      . "      \$m->query(\$q);\n"
+      . "    }\n\n"
       . "    return \$this;\n"
       . "  }";
 
@@ -823,6 +830,22 @@ class Schema
       . "      ->delete(\$this->tbl_{$var_name})\n"
       . "      ->where(array('{$foreign_col}' => \$this->{$getter_id}(\${$var_one}), '{$my_col}' => \$this->get('{$my_id}')));\n"
       . "    \$m->query(\$q);\n\n"
+      . "    return \$this;\n"
+      . "  }";
+
+    $func[] = "  /** @return static */\n"
+      . "  public function {$sync}(\$array)\n"
+      . "  {\n"
+      . "    \$ids     = (array) \$this->{$getter_id}(\$this->{$getter}());\n"
+      . "    \$new_ids = (array) \$this->{$getter_id}(\$array);\n\n"
+      . "    \$drop = array_diff(\$ids, \$new_ids);\n"
+      . "    \$add  = array_diff(\$new_ids, \$ids);\n\n"
+      . "    if (!empty(\$drop)) {\n"
+      . "      \$this->{$remover}(\$drop);\n"
+      . "    }\n\n"
+      . "    if (!empty(\$add)) {\n"
+      . "      \$this->{$adder}(\$add);\n"
+      . "    }\n\n"
       . "    return \$this;\n"
       . "  }";
 
@@ -839,6 +862,13 @@ class Schema
 
     $after[] = "  protected function {$getter_id}(\${$var_one})\n"
       . "  {\n"
+      . "    if (is_array(\${$var_one}) || \${$var_one} instanceof \\Traversable) {\n"
+      . "      \$ids = array();\n"
+      . "      foreach (\${$var_one} as \$item) {\n"
+      . "        \$ids = \$this->{$getter_id}(\$item);\n"
+      . "      }\n\n"
+      . "      return \$ids;\n"
+      . "    }\n\n"
       . "    return \${$var_one} instanceof {$item} ? \${$var_one}->get('{$foreign_id}') : \${$var_one};\n"
       . "  }";
 
