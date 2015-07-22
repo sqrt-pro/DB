@@ -169,7 +169,7 @@ abstract class Book extends \Base\Item
     $new_ids = (array) $this->getMyTagPK($array);
 
     $drop = array_diff($ids, $new_ids);
-    $add  = array_diff($new_ids, $ids);
+    $add  = array_unique(array_diff($new_ids, $ids));
 
     if (!empty($drop)) {
       $this->removeMyTag($drop);
@@ -211,7 +211,7 @@ abstract class Book extends \Base\Item
     if (is_array($my_tag) || $my_tag instanceof \Traversable) {
       $ids = array();
       foreach ($my_tag as $item) {
-        $ids = $this->getMyTagPK($item);
+        $ids[] = $this->getMyTagPK($item);
       }
 
       return $ids;
