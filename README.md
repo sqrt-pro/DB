@@ -200,7 +200,7 @@ $schema->addBitmask('status', array('payed', 'delivered', 'happy'))
 * Будет сгенерирован массив имен для констант, который можно переопределить в наследующем классе и задать человекопонятные имена
   
   ~~~ php
-  protected static $category_arr = array(
+  protected static $status_arr = array(
       self::STATUS_PAYED => 'payed',
       self::STATUS_DELIVERED => 'delivered',
       self::STATUS_HAPPY => 'happy',
