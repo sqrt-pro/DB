@@ -8,6 +8,7 @@ class NewAuthors extends AbstractMigration
   {
     $tbl = $this->table('test_authors', array('id' => 'id'));
     $tbl->addColumn("name", "string", array ( 'length' => 255, 'null' => true,));
+    $tbl->addColumn("birthday", "date", array ( 'null' => true,));
     $tbl->save();
   }
 

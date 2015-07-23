@@ -19,6 +19,7 @@ abstract class Author extends \Base\Item
       array(
         'id',
         'name',
+        'birthday',
       )
     );
   }
@@ -43,6 +44,18 @@ abstract class Author extends \Base\Item
   public function setName($name)
   {
     return $this->set('name', $name);
+  }
+
+  /** @return \SQRT\Helpers\DateTime|bool */
+  public function getBirthday($format = null, $default = false)
+  {
+    return $this->getAsDate('birthday', $format ?: 'd.m.Y', $default);
+  }
+
+  /** @return static */
+  public function setBirthday($birthday)
+  {
+    return $this->setAsDate('birthday', $birthday);
   }
 
   /** @return Collection|\Book[] */

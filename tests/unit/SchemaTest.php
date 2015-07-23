@@ -15,7 +15,8 @@ class schemaTest extends PHPUnit_Framework_TestCase
     $authors = new Schema($m, 'authors');
     $authors
       ->addId()
-      ->addChar('name');
+      ->addChar('name')
+      ->addDate('birthday');
 
     $books = new Schema($m);
     $books
@@ -124,7 +125,9 @@ class schemaTest extends PHPUnit_Framework_TestCase
       ->addBitmask('access', array('guest', 'owner', 'god'))
       ->addFloat('price')
       ->addText('text', true)
-      ->addFile('image');
+      ->addFile('image')
+      ->addDate('birthday')
+      ->addTimeCreated();
 
     $exp  = file_get_contents($this->temp . '/MigrationCreate.php');
     $name = 'my migration';
@@ -263,6 +266,7 @@ class schemaTest extends PHPUnit_Framework_TestCase
       ->addInt('age')
       ->addChar('name')
       ->addFloat('price')
+      ->addDate('birthday')
       ->addTime('created_at')
       ->addFile('pdf')
       ->addImage('avatar')

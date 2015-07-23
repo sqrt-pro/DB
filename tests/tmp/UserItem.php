@@ -47,6 +47,7 @@ abstract class User extends \Base\Item
         'age',
         'name',
         'price',
+        'birthday',
         'created_at',
         'pdf',
         'avatar',
@@ -188,6 +189,18 @@ abstract class User extends \Base\Item
   public function setPrice($price)
   {
     return $this->set('price', $price);
+  }
+
+  /** @return \SQRT\Helpers\DateTime|bool */
+  public function getBirthday($format = null, $default = false)
+  {
+    return $this->getAsDate('birthday', $format ?: 'd.m.Y', $default);
+  }
+
+  /** @return static */
+  public function setBirthday($birthday)
+  {
+    return $this->setAsDate('birthday', $birthday);
   }
 
   /** @return \SQRT\Helpers\DateTime|bool */

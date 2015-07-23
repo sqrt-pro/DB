@@ -15,6 +15,8 @@ class MyMigration extends AbstractMigration
     $tbl->addColumn("price", "float", array ( 'precision' => 10, 'scale' => 2, 'signed' => false, 'default' => 0,));
     $tbl->addColumn("text", "text", array ( 'null' => true, 'limit' => 16777216,));
     $tbl->addColumn("image", "text", array ( 'null' => true,));
+    $tbl->addColumn("birthday", "date", array ( 'null' => true,));
+    $tbl->addColumn("created_at", "timestamp", array ( 'default' => 'CURRENT_TIMESTAMP',));
     $tbl->save();
   }
 

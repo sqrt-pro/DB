@@ -27,6 +27,7 @@ class Schema
   const COL_ENUM      = 'enum';
   const COL_TIMESTAMP = 'timestamp';
   const COL_DATETIME  = 'datetime';
+  const COL_DATE      = 'date';
   const COL_BOOL      = 'boolean';
   const COL_FLOAT     = 'float';
   const COL_TEXT      = 'text';
@@ -166,6 +167,11 @@ class Schema
   public function addTime($col, $unix = true)
   {
     return $this->add($col, ($unix ? static::COL_TIMESTAMP : static::COL_DATETIME), array('null' => true));
+  }
+
+  public function addDate($col)
+  {
+    return $this->add($col, static::COL_DATE, array('null' => true));
   }
 
   public function addTimeCreated($col = 'created_at')
@@ -611,6 +617,7 @@ class Schema
 
         case self::COL_TIMESTAMP:
         case self::COL_DATETIME:
+        case self::COL_DATE:
           $this->makeItemTime($def, $func, $before, $after);
           break;
 
@@ -1079,7 +1086,9 @@ class Schema
     $func[] = "  /** @return \\SQRT\\Helpers\\DateTime|bool */\n"
       . "  public function " . Item::MakeGetterName($col) . "(\$format = null, \$default = false)\n"
       . "  {\n"
-      . "    return \$this->getAsDate('$col', \$format, \$default);\n"
+      . ( $def['type'] == static::COL_DATE
+        ? "    return \$this->getAsDate('$col', \$format ?: 'd.m.Y', \$default);"
+        : "    return \$this->getAsDate('$col', \$format, \$default);") . "\n"
       . "  }";
 
     $func[] = "  /** @return static */\n"
