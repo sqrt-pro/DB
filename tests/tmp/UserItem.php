@@ -190,9 +190,10 @@ abstract class User extends \Base\Item
     return $this->set('price', $price);
   }
 
-  public function getCreatedAt($default = false, $format = null)
+  /** @return \SQRT\Helpers\DateTime|bool */
+  public function getCreatedAt($format = null, $default = false)
   {
-    return $this->getAsDate('created_at', $default, $format);
+    return $this->getAsDate('created_at', $format, $default);
   }
 
   /** @return static */

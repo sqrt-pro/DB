@@ -222,17 +222,34 @@ class ItemTest extends PHPUnit_Framework_TestCase
     $i = new \SQRT\DB\Item($m);
 
     $i->set('date', $date);
-    $this->assertEquals($exp, $i->getAsDate('date', false, $format), $msg);
+    $d = $i->getAsDate('date', $format);
+    if ($date) {
+      $this->assertInstanceOf('SQRT\Helpers\DateTime', $d, 'Тип объекта');
+    }
+
+    $this->assertEquals($exp, (string) $d, $msg);
   }
 
   function dataGetAsDate()
   {
     return array(
       array(false, null, false, 'Нулевая дата'),
-      array('1812-06-24', null, '24.06.1812', 'Даты вне Unix time'),
-      array('2012-01-10', null, '10.01.2012', 'Год вначале'),
+      array('1812-06-24', 'd.m.Y', '24.06.1812', 'Даты вне Unix time'),
+      array('2012-01-10', 'd.m.Y', '10.01.2012', 'Год вначале'),
       array('21.12.2012', 'Y-m-d H:i', '2012-12-21 00:00', 'Преобразование'),
     );
+  }
+
+  function testGetAsDateDefault()
+  {
+    $m = new \SQRT\DB\Manager();
+    $i = new \SQRT\DB\Item($m);
+
+    $this->assertFalse($i->getAsDate('created_at'), 'Значение по-умолчанию');
+
+    $d = $i->getAsDate('created_at', 'Y-m-d', '01.01.2015');
+    $this->assertInstanceOf('SQRT\Helpers\DateTime', $d);
+    $this->assertEquals('2015-01-01', $d->formatDefault());
   }
 
   /**
@@ -245,7 +262,7 @@ class ItemTest extends PHPUnit_Framework_TestCase
 
     $i->setAsDate('birthday', $value);
 
-    $this->assertEquals($exp, $i->getAsDate('birthday'), $msg);
+    $this->assertEquals($exp, (string) $i->getAsDate('birthday', 'd.m.Y'), $msg);
   }
 
   function dataSetAsDate()

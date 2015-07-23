@@ -3,6 +3,7 @@
 namespace SQRT\DB;
 
 use SQRT\Image;
+use SQRT\Helpers\DateTime;
 use SQRT\Helpers\Container;
 use Stringy\StaticStringy;
 
@@ -181,14 +182,17 @@ class Item extends Container
     return $autoescape && is_string($value) ? htmlspecialchars($value) : $value;
   }
 
-  /** Приведение поля с датой в нужный формат */
-  public function getAsDate($column, $default = false, $format = null)
+  /**
+   * Приведение поля с датой в нужный формат
+   * Если $default == false, функция вернет false
+   *
+   * @return DateTime|bool
+   */
+  public function getAsDate($column, $format = null, $default = false)
   {
-    if ($v = $this->get($column)) {
-      return date($format ?: 'd.m.Y', strtotime($v));
-    }
+    $v = $this->get($column, $default);
 
-    return $default;
+    return $v ? new DateTime($v, null, $format) : $default;
   }
 
   /** Установка значения поля с датой */

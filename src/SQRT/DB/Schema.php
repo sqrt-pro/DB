@@ -1076,9 +1076,10 @@ class Schema
   {
     $col = $def['column'];
 
-    $func[] = "  public function " . Item::MakeGetterName($col) . "(\$default = false, \$format = null)\n"
+    $func[] = "  /** @return \\SQRT\\Helpers\\DateTime|bool */\n"
+      . "  public function " . Item::MakeGetterName($col) . "(\$format = null, \$default = false)\n"
       . "  {\n"
-      . "    return \$this->getAsDate('$col', \$default, \$format);\n"
+      . "    return \$this->getAsDate('$col', \$format, \$default);\n"
       . "  }";
 
     $func[] = "  /** @return static */\n"
