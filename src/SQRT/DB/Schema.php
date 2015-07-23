@@ -1274,8 +1274,9 @@ class Schema
     $arr = $this->get($col);
 
     if ($arr['type'] == static::COL_ENUM) {
-      $arr['type'] = static::COL_CHAR;
+      $arr['definition']['values'] = join(',', $arr['options']);
     }
+
     if ($arr['type'] == static::COL_BITMASK) {
       $arr['type'] = static::COL_INT;
     }

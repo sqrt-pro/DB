@@ -129,12 +129,12 @@ class schemaTest extends PHPUnit_Framework_TestCase
       ->addDate('birthday')
       ->addTimeCreated();
 
-    $exp  = file_get_contents($this->temp . '/MigrationCreate.php');
     $name = 'my migration';
     $res  = $s->makeMigration($name);
 
-//    file_put_contents($this->temp . '/MigrationCreate.php', $s->makeMigration($name));
+//    file_put_contents($this->temp . '/MigrationCreate.php', $res);
 
+    $exp  = file_get_contents($this->temp . '/MigrationCreate.php');
     $this->assertEquals($exp, $res, 'Генерация файла миграции');
   }
 
