@@ -60,17 +60,18 @@ class managerTest extends PHPUnit_Framework_TestCase
     };
 
     return array(
-      array($success, $query, true),
-      array($fail, $query, false),
+      array($success, $query, true, $table),
+      array($fail, $query, false, $table),
     );
   }
 
   /**
    * @dataProvider dataTransaction
    */
-  function testTransaction($closure, $query, $success)
+  function testTransaction($closure, $query, $success, $table)
   {
     $m = $this->getManager();
+    $this->makeTable($table);
 
     $initial_count = $m->fetchValue($query);
 
@@ -342,6 +343,7 @@ class managerTest extends PHPUnit_Framework_TestCase
   {
     $m = new \SQRT\DB\Manager();
     $m->addConnection(TEST_HOST, TEST_USER, TEST_PASS, TEST_DB);
+    $m->query('DROP TABLE IF EXISTS `pages`');
     $m->query('DROP TABLE IF EXISTS `names`');
     $m->query('DROP TABLE IF EXISTS `test_names`');
   }
