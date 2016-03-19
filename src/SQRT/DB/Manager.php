@@ -244,6 +244,55 @@ class Manager
     return $this;
   }
 
+  /** Начать транзакцию */
+  public function beginTransaction($connection = null)
+  {
+    $this->getConnection($connection)->beginTransaction();
+
+    return $this;
+  }
+
+  /** @return static */
+  public function commit($connection = null)
+  {
+    $this->getConnection($connection)->commit();
+
+    return $this;
+  }
+
+  /** @return static */
+  public function rollback($connection = null)
+  {
+    $this->getConnection($connection)->rollBack();
+
+    return $this;
+  }
+
+  /** Проверка, активна ли транзакция на соединении */
+  public function inTransaction($connection = null)
+  {
+    return $this->getConnection($connection)->inTransaction();
+  }
+
+  /** Выполнить $closure внутри транзакции. */
+  public function transaction(\Closure $closure, $connection = null)
+  {
+    if (!$this->inTransaction($connection)) {
+      $this->beginTransaction($connection);
+    }
+
+    try {
+      $result = $closure($this);
+      $this->commit($connection);
+    } catch (\Exception $e) {
+      $this->rollback($connection);
+
+      throw $e;
+    }
+
+    return $result;
+  }
+
   /** @return static */
   public function addSchema(Schema $schema)
   {

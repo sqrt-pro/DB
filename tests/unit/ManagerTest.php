@@ -20,6 +20,78 @@ class managerTest extends PHPUnit_Framework_TestCase
     $this->assertInstanceOf('\PDO', $pdo, 'Объект PDO');
   }
 
+  function testBeginCommitRollbackTransaction()
+  {
+    $m = $this->getManager();
+    $m->addConnection(TEST_HOST, TEST_USER, TEST_PASS, TEST_DB, 'utf8', 'another');
+
+    $this->assertFalse($m->inTransaction(), 'Транзакция еще не запущена');
+
+    $m->beginTransaction();
+
+    $this->assertTrue($m->inTransaction(), 'Транзакция активна');
+    $this->assertFalse($m->inTransaction('another'), 'На втором соединении транзакции еще нет');
+
+    $m->beginTransaction('another');
+    $m->rollback();
+
+    $this->assertFalse($m->inTransaction(), 'На соединении по-умолчанию транзакция откатилась');
+    $this->assertTrue($m->inTransaction('another'), 'На втором соединении транзакция активна');
+
+    $m->commit('another');
+    $this->assertFalse($m->inTransaction('another'), 'На втором соединении транзакции завершилась');
+  }
+
+  function dataTransaction()
+  {
+    $table = 'pages';
+    $query = 'SELECT count(*) FROM ' . $table;
+
+    $success = function (\SQRT\DB\Manager $m) use ($table, $query) {
+      $m->query('INSERT INTO ' . $table . ' (name) VALUES ("ololo success")');
+
+      return 123;
+    };
+
+    $fail = function (\SQRT\DB\Manager $m) use ($table, $query) {
+      $m->query('INSERT INTO ' . $table . ' (name) VALUES ("ololo fail")');
+
+      throw new Exception('rollback');
+    };
+
+    return array(
+      array($success, $query, true),
+      array($fail, $query, false),
+    );
+  }
+
+  /**
+   * @dataProvider dataTransaction
+   */
+  function testTransaction($closure, $query, $success)
+  {
+    $m = $this->getManager();
+
+    $initial_count = $m->fetchValue($query);
+
+    try {
+      $result = $m->transaction($closure);
+      $this->assertEquals(123, $result);
+
+      if (!$success) {
+        $this->fail('Исключение не было выброшено');
+      }
+    } catch (\Exception $e) {
+      $this->assertEquals('rollback', $e->getMessage());
+    }
+
+    $result_count = $m->fetchValue($query);
+
+    $success
+      ? $this->assertEquals($initial_count + 1, $result_count, 'Изменения применились')
+      : $this->assertEquals($initial_count, $result_count, 'Изменения откатились');
+  }
+
   function testQuery()
   {
     $m = new \SQRT\DB\Manager();
