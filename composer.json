@@ -6,13 +6,13 @@
   "license": "MIT",
   "require": {
     "php": ">=5.3.0",
-    "sqrt-pro/exception": "dev-master",
-    "sqrt-pro/query-builder": "dev-master",
-    "sqrt-pro/helpers": "dev-master",
-    "sqrt-pro/image": "dev-master",
-    "sqrt-pro/url": "dev-master",
+    "sqrt-pro/exception": "~0.1.0",
+    "sqrt-pro/query-builder": "~0.1.0",
+    "sqrt-pro/helpers": "~0.1.0",
+    "sqrt-pro/image": "~0.1.1",
+    "sqrt-pro/url": "~0.1.0",
     "danielstjules/stringy": "~1.10",
-    "robmorgan/phinx": "*"
+    "robmorgan/phinx": "~0.5"
   },
   "require-dev": {
     "satooshi/php-coveralls": "dev-master"
@@ -22,10 +22,5 @@
       "SQRT": "src"
     }
   },
-  "minimum-stability": "dev",
-  "extra": {
-    "branch-alias": {
-      "dev-master": "0.0.1-dev"
-    }
-  }
+  "minimum-stability": "dev"
 }
